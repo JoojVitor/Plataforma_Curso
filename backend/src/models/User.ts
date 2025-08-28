@@ -1,0 +1,17 @@
+import mongoose, { Document, Schema } from "mongoose";
+
+export interface IUser extends Document {
+  nome: string;
+  email: string;
+  senha: string;
+  role: "aluno" | "instrutor";
+}
+
+const UserSchema: Schema = new Schema<IUser>({
+  nome: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  senha: { type: String, required: true },
+  role: { type: String, enum: ["aluno", "instrutor"], default: "aluno" },
+});
+
+export default mongoose.model<IUser>("User", UserSchema);
