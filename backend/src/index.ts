@@ -5,6 +5,7 @@ import { connectDB } from "./db";
 import healthRoutes from "./routes/health";
 import authRoutes from "./routes/auth";
 import profileRoutes from "./routes/profile";
+import courseRoutes from "./routes/courses";
 
 dotenv.config();
 
@@ -14,8 +15,8 @@ const PORT = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 app.use("/api/profile", profileRoutes);
+app.use("/api/courses", courseRoutes);
 
-// Rotas
 app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
 
