@@ -1,6 +1,8 @@
 import { Router } from "express";
+import { getSignedVideoUrl } from "../utils/s3";
 import { authMiddleware, AuthRequest } from "../middleware/authMiddleware";
 import Course from "../models/Course";
+import Enrollment from "../models/Enrollment";
 
 const router = Router();
 
@@ -81,6 +83,43 @@ router.delete("/:id", authMiddleware, async (req: AuthRequest, res) => {
     res.json({ message: "Curso removido com sucesso" });
   } catch (error) {
     res.status(500).json({ message: "Erro ao excluir curso", error });
+  }
+});
+
+router.get("/:id/lessons", authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const courseId = req.params.id;
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(404).json({ message: "Curso não encontrado" });
+
+    if (course.instrutor.toString() === req.user.id) {
+      const aulasComLinks = await Promise.all(
+        course.aulas.map(async (aula) => ({
+          titulo: aula.titulo,
+          url: await getSignedVideoUrl(aula.url)
+        }))
+      );
+      return res.json({ aulas: aulasComLinks });
+    }
+
+    if (req.user.role === "aluno") {
+      const isEnrolled = await Enrollment.findOne({ aluno: req.user.id, curso: courseId });
+      if (!isEnrolled) {
+        return res.status(403).json({ message: "Você não está inscrito neste curso" });
+      }
+
+      const aulasComLinks = await Promise.all(
+        course.aulas.map(async (aula) => ({
+          titulo: aula.titulo,
+          url: await getSignedVideoUrl(aula.url)
+        }))
+      );
+      return res.json({ aulas: aulasComLinks });
+    }
+
+    res.status(403).json({ message: "Acesso negado" });
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao acessar aulas", error });
   }
 });
 
