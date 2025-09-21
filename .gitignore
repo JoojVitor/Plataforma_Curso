@@ -1,0 +1,49 @@
+# =========================================
+# Node.js / Backend
+# =========================================
+node_modules/
+dist/
+build/
+coverage/
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# Cache
+.cache/
+.tmp/
+tsbuildinfo.json
+*.tsbuildinfo
+
+# =========================================
+# Next.js / Frontend
+# =========================================
+.next/
+out/
+.next/static/
+.vercel/
+.vscode/
+*.swp
+
+# =========================================
+# MacOS / IDEs
+# =========================================
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# =========================================
+# AWS / Credenciais (nunca versionar!)
+# =========================================
+.aws/
