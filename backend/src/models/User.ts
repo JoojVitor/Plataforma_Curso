@@ -11,7 +11,7 @@ const UserSchema: Schema = new Schema<IUser>({
   nome: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   senha: { type: String, required: true },
-  role: { type: String, enum: ["aluno", "instrutor"], default: "aluno" },
+  role: { type: String, enum: ["aluno", "instrutor", "admin"], default: "aluno" },
 });
 
 export default mongoose.model<IUser>("User", UserSchema);

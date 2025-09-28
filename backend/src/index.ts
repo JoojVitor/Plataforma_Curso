@@ -8,6 +8,7 @@ import profileRoutes from "./routes/profile";
 import courseRoutes from "./routes/courses";
 import enrollmentRoutes from "./routes/enrollments";
 import uploadRoutes from "./routes/upload";
+import adminRoutes from "./routes/admin";
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("api/admin", adminRoutes);
 
 app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
