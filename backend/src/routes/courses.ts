@@ -14,6 +14,27 @@ router.post("/", authMiddleware, async (req: AuthRequest, res) => {
 
     const { titulo, descricao, aulas } = req.body;
 
+    if (!titulo || titulo.trim().length < 3) {
+      return res.status(400).json({ message: "Título é obrigatório e deve ter pelo menos 3 caracteres" });
+    }
+
+    if (!descricao || descricao.trim().length < 10) {
+      return res.status(400).json({ message: "Descrição é obrigatória e deve ter pelo menos 10 caracteres" });
+    }
+
+    if (!aulas || !Array.isArray(aulas) || aulas.length === 0) {
+      return res.status(400).json({ message: "Curso deve conter ao menos uma aula" });
+    }
+
+    for (const aula of aulas) {
+      if (!aula.titulo || aula.titulo.trim().length < 3) {
+        return res.status(400).json({ message: "Cada aula precisa ter um título válido" });
+      }
+      if (!aula.url || typeof aula.url !== "string") {
+        return res.status(400).json({ message: "Cada aula precisa ter uma URL válida (chave no S3)" });
+      }
+    }
+
     const course = new Course({
       titulo,
       descricao,
