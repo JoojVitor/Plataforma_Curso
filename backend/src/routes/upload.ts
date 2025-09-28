@@ -14,7 +14,6 @@ const s3 = new S3Client({
   },
 });
 
-// Rota para gerar URL de upload
 router.post("/", authMiddleware, async (req: AuthRequest, res) => {
   try {
     if (req.user.role !== "instrutor") {
@@ -22,11 +21,15 @@ router.post("/", authMiddleware, async (req: AuthRequest, res) => {
     }
 
     const { fileName, contentType } = req.body;
+
     if (!fileName || !contentType) {
       return res.status(400).json({ message: "Nome do arquivo e contentType são obrigatórios" });
     }
 
-    // Exemplo: aulas/video123.mp4
+    if (!contentType.startsWith("video/")) {
+      return res.status(400).json({ message: "Apenas arquivos de vídeo são permitidos" });
+    }
+
     const key = `aulas/${Date.now()}-${fileName}`;
 
     const command = new PutObjectCommand({
@@ -35,16 +38,17 @@ router.post("/", authMiddleware, async (req: AuthRequest, res) => {
       ContentType: contentType,
     });
 
-    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 }); // 1h
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
 
     res.json({
       uploadUrl,
-      key, // guardamos no banco como "url" da aula
+      key,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Erro ao gerar URL de upload", error });
   }
 });
+
 
 export default router;
