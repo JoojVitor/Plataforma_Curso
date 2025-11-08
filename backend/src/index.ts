@@ -2,6 +2,7 @@ import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import { connectDB } from './db'
+import cookieParser from 'cookie-parser'
 import authRoutes from './routes/auth'
 import healthCheckRoutes from './routes/health'
 import courseRoutes from './routes/courses'
@@ -16,10 +17,12 @@ const port = process.env.PORT || 3001
 connectDB()
 
 app.use(cors({
-  origin: 'http://localhost:3000'
+  origin: 'http://localhost:3000',
+  credentials: true
 }))
 
 app.use(express.json())
+app.use(cookieParser())
 
 app.use('/api/health', healthCheckRoutes)
 app.use('/api/auth', authRoutes)

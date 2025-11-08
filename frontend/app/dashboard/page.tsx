@@ -1,108 +1,90 @@
-import { Navbar } from "@/components/navbar"
-import { Sidebar } from "@/components/sidebar"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { BookOpen, Users, TrendingUp, Plus } from "lucide-react"
-import Link from "next/link"
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { Sidebar } from "@/components/sidebar";
+import { Navbar } from "@/components/navbar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardPage() {
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar user={{ name: "Instrutor", role: "instrutor" }} />
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const router = useRouter();
 
-      <div className="flex-1 flex">
-        <Sidebar userRole="instrutor" />
+  // Efeito para proteger a rota:
+  // Se não estiver carregando e não estiver autenticado,
+  // redireciona para a página de login.
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isLoading, isAuthenticated, router]);
 
-        <main className="flex-1 overflow-auto bg-muted/30">
-          <div className="container max-w-6xl mx-auto px-4 py-8">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-                <p className="text-muted-foreground">Bem-vindo de volta! Aqui está um resumo da sua atividade.</p>
-              </div>
-              <Button asChild>
-                <Link href="/courses/create">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Criar Curso
-                </Link>
-              </Button>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total de Cursos</CardTitle>
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">12</div>
-                  <p className="text-xs text-muted-foreground mt-1">+2 este mês</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total de Alunos</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">3,456</div>
-                  <p className="text-xs text-muted-foreground mt-1">+234 este mês</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Taxa de Conclusão</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">78%</div>
-                  <p className="text-xs text-muted-foreground mt-1">+5% este mês</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Recent Courses */}
+  // Estado de Loading:
+  // Mostra um esqueleto da interface enquanto
+  // o AuthContext verifica se o usuário está logado.
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen w-full">
+        {/* CORREÇÃO 1: Passando user?.role (será undefined, o que é esperado) */}
+        <Sidebar userRole={user?.role} />
+        <div className="flex flex-col flex-1">
+          <Navbar />
+          <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
             <Card>
               <CardHeader>
-                <CardTitle>Meus Cursos Recentes</CardTitle>
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-4 w-64 mt-2" />
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { title: "Desenvolvimento Web com React", students: 1234, status: "Publicado" },
-                    { title: "Python para Iniciantes", students: 892, status: "Publicado" },
-                    { title: "Design UI/UX Avançado", students: 567, status: "Rascunho" },
-                  ].map((course, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                      <div>
-                        <h3 className="font-medium">{course.title}</h3>
-                        <p className="text-sm text-muted-foreground">{course.students} alunos inscritos</p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            course.status === "Publicado"
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                              : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                          }`}
-                        >
-                          {course.status}
-                        </span>
-                        <Button variant="outline" size="sm" className="bg-transparent">
-                          Editar
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <CardContent className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
               </CardContent>
             </Card>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
-  )
+    );
+  }
+
+  // Estado Autenticado:
+  // Se o usuário estiver autenticado, mostra o conteúdo da dashboard.
+  if (isAuthenticated && user) {
+    return (
+      <div className="flex min-h-screen w-full">
+        {/* CORREÇÃO 1: Passando o user.role real */}
+        <Sidebar userRole={user.role} />
+        <div className="flex flex-col flex-1">
+          <Navbar />
+          <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Bem-vindo, {user.nome}!</CardTitle>
+                <CardDescription>
+                  Este é o seu painel de controle.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>Aqui você pode gerenciar seus cursos e seu perfil.</p>
+                <p>Seu e-mail: {user.email}</p>
+                <p>Sua função: {user.role}</p>
+              </CardContent>
+            </Card>
+          </main>
+          S     </div>
+      </div>
+    );
+  }
+
+  // Retorna null para evitar "piscar" a tela
+  // enquanto o redirecionamento acontece.
+  return null;
 }
