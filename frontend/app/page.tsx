@@ -40,7 +40,8 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      <section className="bg-linear-to-b from-primary/10 to-background py-20 px-4">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-b from-primary/10 to-background py-20 px-4">
         <div className="container max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-balance">
             Aprenda com os Melhores Instrutores

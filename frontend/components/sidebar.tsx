@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { LayoutDashboard, BookOpen, Users, Settings } from "lucide-react"
 
 interface SidebarProps {
-  userRole?: "aluno" | "instrutor" | "admin" | string;
+  userRole: "instrutor" | "admin"
 }
 
 export function Sidebar({ userRole }: SidebarProps) {

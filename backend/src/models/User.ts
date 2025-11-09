@@ -1,10 +1,11 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IUser extends Document {
+  id: string;
   nome: string;
   email: string;
   senha: string;
-  role: "aluno" | "instrutor";
+  role: "aluno" | "instrutor" | "admin";
 }
 
 const UserSchema: Schema = new Schema<IUser>({

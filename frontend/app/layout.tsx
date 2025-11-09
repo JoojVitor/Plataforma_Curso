@@ -1,28 +1,30 @@
-// frontend/app/layout.tsx
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { AuthProvider } from "@/context/AuthContext"; // 1. Importar
+import type React from "react"
+import type { Metadata } from "next"
+import { Geist, Geist_Mono } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
+import { AuthProvider } from "@/lib/auth-context"
+import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"] });
+const _geist = Geist({ subsets: ["latin"] })
+const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Plataforma de Cursos",
-  description: "Aprenda e ensine na nossa plataforma",
-};
+  title: "Plataforma Cursos - Aprenda Online",
+  description: "Plataforma de cursos online com os melhores instrutores",
+  generator: "v0.app",
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-br">
-      <body className={inter.className}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+    <html lang="pt-BR">
+      <body className={`font-sans antialiased`}>
+        <AuthProvider>{children}</AuthProvider>
+        <Analytics />
       </body>
     </html>
-  );
+  )
 }

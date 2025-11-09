@@ -1,64 +1,54 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { GraduationCap } from "lucide-react";
-import { api } from "@/lib/api";
+import type React from "react"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { GraduationCap } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "aluno",
-  });
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.id]: e.target.value });
-  };
-
-  const handleRoleChange = (value: string) => {
-    setForm({ ...form, role: value });
-  };
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [role, setRole] = useState("aluno")
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+  const { register } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+    e.preventDefault()
+    setError("")
 
-    if (form.password !== form.confirmPassword) {
-      setError("As senhas não coincidem.");
-      return;
+    if (password !== confirmPassword) {
+      setError("As senhas não correspondem")
+      return
     }
+
+    if (password.length < 6) {
+      setError("A senha deve ter no mínimo 6 caracteres")
+      return
+    }
+
+    setIsLoading(true)
 
     try {
-      setLoading(true);
-      await api.post("/auth/register", {
-        nome: form.name,
-        email: form.email,
-        senha: form.password,
-        role: form.role,
-      });
-
-      alert("Conta criada com sucesso!");
-      router.push("/login");
-    } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.message || "Erro ao registrar usuário.");
+      await register(email, password, name, role)
+      router.push("/courses")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao registrar")
     } finally {
-      setLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-8">
@@ -71,33 +61,68 @@ export default function RegisterPage() {
         </div>
 
         <Card>
-          <form onSubmit={handleSubmit}>
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold text-center">Criar Conta</CardTitle>
-              <CardDescription className="text-center">
-                Preencha os dados abaixo para criar sua conta
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center">Criar Conta</CardTitle>
+            <CardDescription className="text-center">Preencha os dados abaixo para criar sua conta</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {error && (
+              <div className="bg-destructive/10 border border-destructive text-destructive px-3 py-2 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nome Completo</Label>
-                <Input id="name" type="text" placeholder="João Silva" value={form.name} onChange={handleChange} required />
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="João Silva"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
-                <Input id="email" type="email" placeholder="seu@email.com" value={form.email} onChange={handleChange} required />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
-                <Input id="password" type="password" placeholder="••••••••" value={form.password} onChange={handleChange} required />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                <Input id="confirmPassword" type="password" placeholder="••••••••" value={form.confirmPassword} onChange={handleChange} required />
+                <Label htmlFor="confirm-password">Confirmar Senha</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
               </div>
               <div className="space-y-3">
                 <Label>Tipo de Conta</Label>
-                <RadioGroup value={form.role} onValueChange={handleRoleChange} className="flex flex-col gap-3">
+                <RadioGroup value={role} onValueChange={setRole} disabled={isLoading}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="aluno" id="aluno" />
                     <Label htmlFor="aluno" className="font-normal cursor-pointer">
@@ -112,22 +137,21 @@ export default function RegisterPage() {
                   </div>
                 </RadioGroup>
               </div>
-              {error && <p className="text-sm text-red-600 text-center">{error}</p>}
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button className="w-full" size="lg" type="submit" disabled={loading}>
-                {loading ? "Criando conta..." : "Criar Conta"}
+              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                {isLoading ? "Criando conta..." : "Criar Conta"}
               </Button>
-              <p className="text-sm text-center text-muted-foreground">
-                Já tem uma conta?{" "}
-                <Link href="/login" className="text-primary font-medium hover:underline">
-                  Entrar
-                </Link>
-              </p>
-            </CardFooter>
-          </form>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-4">
+            <p className="text-sm text-center text-muted-foreground w-full">
+              Já tem uma conta?{" "}
+              <Link href="/login" className="text-primary font-medium hover:underline">
+                Entrar
+              </Link>
+            </p>
+          </CardFooter>
         </Card>
       </div>
     </div>
-  );
+  )
 }
