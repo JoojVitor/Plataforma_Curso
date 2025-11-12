@@ -4,35 +4,57 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { Sidebar } from "@/components/sidebar"
 import { ProtectedRoute } from "@/lib/protected-route"
+import { VideoUpload } from "@/components/video-upload"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Trash2, Upload, GripVertical } from "lucide-react"
+import { Plus, Trash2, GripVertical, Loader2 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
+import { toast } from "sonner"
+import { ApiClient } from "@/lib/api-client"
 
 interface Lesson {
   id: string
-  title: string
-  videoFile: File | null
-  videoFileName: string
+  titulo: string
+  url: string
+}
+
+interface CourseFormData {
+  titulo: string
+  descricao: string
+  categoria?: string
+  nivel?: string
+  aulas: Lesson[]
 }
 
 export default function CreateCoursePage() {
   const { user } = useAuth()
-  const [lessons, setLessons] = useState<Lesson[]>([{ id: "1", title: "", videoFile: null, videoFileName: "" }])
+  const router = useRouter()
+
+  const [courseData, setCourseData] = useState<CourseFormData>({
+    titulo: "",
+    descricao: "",
+    categoria: "",
+    nivel: "",
+    aulas: [{ id: "1", titulo: "", url: "" }],
+  })
+
+  const [lessons, setLessons] = useState<Lesson[]>([{ id: "1", titulo: "", url: "" }])
+  const [submitting, setSubmitting] = useState(false)
+  const [uploadingLessonId, setUploadingLessonId] = useState<string | null>(null)
 
   const addLesson = () => {
     const newLesson: Lesson = {
       id: Date.now().toString(),
-      title: "",
-      videoFile: null,
-      videoFileName: "",
+      titulo: "",
+      url: "",
     }
     setLessons([...lessons, newLesson])
   }
@@ -43,21 +65,76 @@ export default function CreateCoursePage() {
     }
   }
 
-  const updateLessonTitle = (id: string, title: string) => {
-    setLessons(lessons.map((lesson) => (lesson.id === id ? { ...lesson, title } : lesson)))
+  const updateLessonTitle = (id: string, titulo: string) => {
+    setLessons(lessons.map((lesson) => (lesson.id === id ? { ...lesson, titulo } : lesson)))
   }
 
-  const updateLessonVideo = (id: string, file: File | null) => {
-    setLessons(
-      lessons.map((lesson) =>
-        lesson.id === id ? { ...lesson, videoFile: file, videoFileName: file?.name || "" } : lesson,
-      ),
-    )
+  const handleUploadSuccess = (key: string, fileName: string, lessonId: string) => {
+    console.log("[v0] Upload success for lesson:", lessonId, "key:", key)
+    setLessons(lessons.map((lesson) => (lesson.id === lessonId ? { ...lesson, url: key } : lesson)))
+    setUploadingLessonId(null)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Course data:", { lessons })
+
+    // Validate required fields
+    if (!courseData.titulo.trim()) {
+      toast("Campo obrigatório", {
+        description: "Por favor, preencha o título do curso"
+      })
+      return
+    }
+
+    if (!courseData.descricao.trim()) {
+      toast("Campo obrigatório", {
+        description: "Por favor, preencha a descrição do curso"
+      })
+      return
+    }
+
+    if (lessons.length === 0 || lessons.some((l) => !l.titulo || !l.url)) {
+      toast("Aulas incompletas", {
+        description: "Todas as aulas precisam de título e vídeo"
+      })
+      return
+    }
+
+    setSubmitting(true)
+
+    try {
+      console.log("[v0] Submitting course with payload:", {
+        titulo: courseData.titulo,
+        descricao: courseData.descricao,
+        aulas: lessons,
+      })
+
+      await ApiClient.createCourse({
+        titulo: courseData.titulo,
+        descricao: courseData.descricao,
+        categoria: courseData.categoria || "",
+        nivel: courseData.nivel || "",
+        aulas: lessons,
+      })
+
+      toast("Sucesso!", {
+        description: "Curso criado com sucesso. Redirecionando...",
+      })
+
+      // Redirect to dashboard after 2 seconds
+      setTimeout(() => {
+        router.push("/dashboard")
+      }, 2000)
+    } catch (error) {
+      console.error("[v0] Course creation error:", error)
+      const errorMessage = error instanceof Error ? error.message : "Erro ao criar curso"
+
+      toast("Erro ao criar curso", {
+        description: errorMessage
+      })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -84,35 +161,38 @@ export default function CreateCoursePage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="title">Título do Curso *</Label>
-                      <Input id="title" placeholder="Ex: Desenvolvimento Web com React" required />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Descrição Curta *</Label>
-                      <Textarea
-                        id="description"
-                        placeholder="Uma breve descrição do curso (máximo 200 caracteres)"
-                        rows={3}
-                        maxLength={200}
+                      <Label htmlFor="titulo">Título do Curso *</Label>
+                      <Input
+                        id="titulo"
+                        placeholder="Ex: Desenvolvimento Web com React"
+                        value={courseData.titulo}
+                        onChange={(e) => setCourseData({ ...courseData, titulo: e.target.value })}
                         required
+                        disabled={submitting}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="long-description">Descrição Completa *</Label>
+                      <Label htmlFor="description">Descrição do Curso *</Label>
                       <Textarea
-                        id="long-description"
-                        placeholder="Descreva detalhadamente o que os alunos aprenderão neste curso"
-                        rows={6}
+                        id="description"
+                        placeholder="Descreva em detalhes o que os alunos aprenderão neste curso"
+                        rows={4}
+                        value={courseData.descricao}
+                        onChange={(e) => setCourseData({ ...courseData, descricao: e.target.value })}
                         required
+                        disabled={submitting}
                       />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="category">Categoria *</Label>
-                        <Select required>
+                        <Label htmlFor="category">Categoria</Label>
+                        <Select
+                          value={courseData.categoria}
+                          onValueChange={(value) => setCourseData({ ...courseData, categoria: value })}
+                          disabled={submitting}
+                        >
                           <SelectTrigger id="category">
                             <SelectValue placeholder="Selecione uma categoria" />
                           </SelectTrigger>
@@ -128,8 +208,12 @@ export default function CreateCoursePage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="level">Nível *</Label>
-                        <Select required>
+                        <Label htmlFor="level">Nível</Label>
+                        <Select
+                          value={courseData.nivel}
+                          onValueChange={(value) => setCourseData({ ...courseData, nivel: value })}
+                          disabled={submitting}
+                        >
                           <SelectTrigger id="level">
                             <SelectValue placeholder="Selecione o nível" />
                           </SelectTrigger>
@@ -140,17 +224,6 @@ export default function CreateCoursePage() {
                           </SelectContent>
                         </Select>
                       </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="thumbnail">Imagem de Capa</Label>
-                      <div className="flex items-center gap-4">
-                        <Input id="thumbnail" type="file" accept="image/*" className="flex-1" />
-                        <Button type="button" variant="outline" size="icon">
-                          <Upload className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Recomendado: 1280x720px (16:9)</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -176,6 +249,7 @@ export default function CreateCoursePage() {
                               size="icon"
                               onClick={() => removeLesson(lesson.id)}
                               className="text-destructive hover:text-destructive"
+                              disabled={submitting}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -183,39 +257,36 @@ export default function CreateCoursePage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor={`lesson-title-${lesson.id}`}>Título da Aula *</Label>
+                          <Label htmlFor={`lesson-titulo-${lesson.id}`}>Título da Aula *</Label>
                           <Input
-                            id={`lesson-title-${lesson.id}`}
-                            value={lesson.title}
+                            id={`lesson-titulo-${lesson.id}`}
+                            value={lesson.titulo}
                             onChange={(e) => updateLessonTitle(lesson.id, e.target.value)}
                             placeholder="Ex: Introdução ao React"
                             required
+                            disabled={submitting}
                           />
                         </div>
 
                         <div className="space-y-2">
                           <Label htmlFor={`lesson-video-${lesson.id}`}>Vídeo da Aula *</Label>
-                          <div className="flex items-center gap-4">
-                            <Input
-                              id={`lesson-video-${lesson.id}`}
-                              type="file"
-                              accept="video/*"
-                              onChange={(e) => updateLessonVideo(lesson.id, e.target.files?.[0] || null)}
-                              className="flex-1"
-                              required
-                            />
-                            {lesson.videoFileName && (
-                              <span className="text-sm text-muted-foreground truncate max-w-xs">
-                                {lesson.videoFileName}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground">Formatos aceitos: MP4, MOV, AVI (máx. 500MB)</p>
+                          <VideoUpload
+                            onUploadSuccess={(key, fileName) => handleUploadSuccess(key, fileName, lesson.id)}
+                            onUploadStart={() => setUploadingLessonId(lesson.id)}
+                            onUploadEnd={() => setUploadingLessonId(null)}
+                          />
+                          {lesson.url && <p className="text-xs text-green-600">Video enviado: {lesson.url}</p>}
                         </div>
                       </div>
                     ))}
 
-                    <Button type="button" variant="outline" onClick={addLesson} className="w-full bg-transparent">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addLesson}
+                      className="w-full bg-transparent"
+                      disabled={submitting || uploadingLessonId !== null}
+                    >
                       <Plus className="mr-2 h-4 w-4" />
                       Adicionar Aula
                     </Button>
@@ -224,15 +295,19 @@ export default function CreateCoursePage() {
 
                 {/* Actions */}
                 <div className="flex items-center justify-between gap-4">
-                  <Button type="button" variant="outline" asChild className="bg-transparent">
+                  <Button type="button" variant="outline" asChild className="bg-transparent" disabled={submitting}>
                     <Link href="/dashboard">Cancelar</Link>
                   </Button>
-                  <div className="flex gap-2">
-                    <Button type="button" variant="outline" className="bg-transparent">
-                      Salvar Rascunho
-                    </Button>
-                    <Button type="submit">Publicar Curso</Button>
-                  </div>
+                  <Button type="submit" disabled={submitting || uploadingLessonId !== null}>
+                    {submitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Publicando...
+                      </>
+                    ) : (
+                      "Publicar Curso"
+                    )}
+                  </Button>
                 </div>
               </form>
             </div>
