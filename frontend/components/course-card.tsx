@@ -5,7 +5,7 @@ import { BookOpen, Clock, Users } from "lucide-react"
 
 interface CourseCardProps {
   id: string
-  title: string
+  titulo: string
   description: string
   instructor: string
   thumbnail?: string
@@ -13,12 +13,12 @@ interface CourseCardProps {
   students?: number
 }
 
-export function CourseCard({ id, title, description, instructor, thumbnail, duration, students }: CourseCardProps) {
+export function CourseCard({ id, titulo, description, instructor, thumbnail, duration, students }: CourseCardProps) {
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-lg">
       <div className="aspect-video w-full overflow-hidden bg-muted">
         {thumbnail ? (
-          <img src={thumbnail || "/placeholder.svg"} alt={title} className="h-full w-full object-cover" />
+          <img src={thumbnail || "/placeholder.svg"} alt={titulo} className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <BookOpen className="h-12 w-12 text-muted-foreground" />
@@ -26,7 +26,7 @@ export function CourseCard({ id, title, description, instructor, thumbnail, dura
         )}
       </div>
       <CardHeader>
-        <h3 className="text-lg font-semibold leading-tight line-clamp-2 text-balance">{title}</h3>
+        <h3 className="text-lg font-semibold leading-tight line-clamp-2 text-balance">{titulo}</h3>
         <p className="text-sm text-muted-foreground">{instructor}</p>
       </CardHeader>
       <CardContent>

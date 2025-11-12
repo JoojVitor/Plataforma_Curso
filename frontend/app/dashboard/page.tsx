@@ -79,16 +79,16 @@ export default function DashboardPage() {
                 <CardContent>
                   <div className="space-y-4">
                     {[
-                      { title: "Desenvolvimento Web com React", students: 1234, status: "Publicado" },
-                      { title: "Python para Iniciantes", students: 892, status: "Publicado" },
-                      { title: "Design UI/UX Avançado", students: 567, status: "Rascunho" },
+                      { titulo: "Desenvolvimento Web com React", students: 1234, status: "Publicado" },
+                      { titulo: "Python para Iniciantes", students: 892, status: "Publicado" },
+                      { titulo: "Design UI/UX Avançado", students: 567, status: "Rascunho" },
                     ].map((course, index) => (
                       <div
                         key={index}
                         className="flex items-center justify-between p-4 border border-border rounded-lg"
                       >
                         <div>
-                          <h3 className="font-medium">{course.title}</h3>
+                          <h3 className="font-medium">{course.titulo}</h3>
                           <p className="text-sm text-muted-foreground">{course.students} alunos inscritos</p>
                         </div>
                         <div className="flex items-center gap-4">

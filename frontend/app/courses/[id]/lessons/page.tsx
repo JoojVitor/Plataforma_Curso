@@ -11,18 +11,18 @@ import { cn } from "@/lib/utils"
 // Mock data
 const courseData = {
   id: "1",
-  title: "Desenvolvimento Web Completo com React e Next.js",
+  titulo: "Desenvolvimento Web Completo com React e Next.js",
   lessons: [
-    { id: "1", title: "Introdução ao Curso", duration: "10:30", videoUrl: "#", completed: true },
-    { id: "2", title: "Configurando o Ambiente de Desenvolvimento", duration: "15:45", videoUrl: "#", completed: true },
-    { id: "3", title: "Fundamentos do React", duration: "25:20", videoUrl: "#", completed: false },
-    { id: "4", title: "Componentes e Props", duration: "30:15", videoUrl: "#", completed: false },
-    { id: "5", title: "State e Lifecycle", duration: "28:40", videoUrl: "#", completed: false },
-    { id: "6", title: "Hooks do React", duration: "35:25", videoUrl: "#", completed: false },
-    { id: "7", title: "Introdução ao Next.js", duration: "20:10", videoUrl: "#", completed: false },
-    { id: "8", title: "Roteamento no Next.js", duration: "22:35", videoUrl: "#", completed: false },
-    { id: "9", title: "Server Components", duration: "30:50", videoUrl: "#", completed: false },
-    { id: "10", title: "Projeto Final", duration: "45:00", videoUrl: "#", completed: false },
+    { id: "1", titulo: "Introdução ao Curso", duration: "10:30", videoUrl: "#", completed: true },
+    { id: "2", titulo: "Configurando o Ambiente de Desenvolvimento", duration: "15:45", videoUrl: "#", completed: true },
+    { id: "3", titulo: "Fundamentos do React", duration: "25:20", videoUrl: "#", completed: false },
+    { id: "4", titulo: "Componentes e Props", duration: "30:15", videoUrl: "#", completed: false },
+    { id: "5", titulo: "State e Lifecycle", duration: "28:40", videoUrl: "#", completed: false },
+    { id: "6", titulo: "Hooks do React", duration: "35:25", videoUrl: "#", completed: false },
+    { id: "7", titulo: "Introdução ao Next.js", duration: "20:10", videoUrl: "#", completed: false },
+    { id: "8", titulo: "Roteamento no Next.js", duration: "22:35", videoUrl: "#", completed: false },
+    { id: "9", titulo: "Server Components", duration: "30:50", videoUrl: "#", completed: false },
+    { id: "10", titulo: "Projeto Final", duration: "45:00", videoUrl: "#", completed: false },
   ],
 }
 
@@ -59,7 +59,7 @@ export default function LessonsPage() {
               Voltar ao Curso
             </Link>
           </div>
-          <h1 className="text-sm font-medium truncate max-w-md hidden sm:block">{courseData.title}</h1>
+          <h1 className="text-sm font-medium truncate max-w-md hidden sm:block">{courseData.titulo}</h1>
           <div className="w-20" /> {/* Spacer for centering */}
         </div>
       </header>
@@ -102,7 +102,7 @@ export default function LessonsPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium mb-1 line-clamp-2">{lesson.title}</div>
+                      <div className="text-sm font-medium mb-1 line-clamp-2">{lesson.titulo}</div>
                       <div
                         className={cn("text-xs", currentLessonIndex === index ? "opacity-90" : "text-muted-foreground")}
                       >
@@ -123,7 +123,7 @@ export default function LessonsPage() {
             <div className="h-full flex items-center justify-center text-white">
               <div className="text-center">
                 <div className="text-lg mb-2">Player de Vídeo</div>
-                <div className="text-sm text-gray-400">Aula: {currentLesson.title}</div>
+                <div className="text-sm text-gray-400">Aula: {currentLesson.titulo}</div>
               </div>
             </div>
           </div>
@@ -132,13 +132,13 @@ export default function LessonsPage() {
           <div className="flex-1 overflow-auto">
             <div className="p-6">
               <div className="max-w-4xl mx-auto">
-                <h2 className="text-2xl font-bold mb-2 text-balance">{currentLesson.title}</h2>
+                <h2 className="text-2xl font-bold mb-2 text-balance">{currentLesson.titulo}</h2>
                 <p className="text-sm text-muted-foreground mb-6">Duração: {currentLesson.duration}</p>
 
                 <Card className="p-6 mb-6">
                   <h3 className="font-semibold mb-3">Sobre esta aula</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed text-pretty">
-                    Nesta aula, você aprenderá conceitos importantes sobre {currentLesson.title.toLowerCase()}.
+                    Nesta aula, você aprenderá conceitos importantes sobre {currentLesson.titulo.toLowerCase()}.
                     Acompanhe o vídeo com atenção e pratique os exemplos apresentados para fixar o conteúdo.
                   </p>
                 </Card>

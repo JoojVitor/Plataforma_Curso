@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth-context"
 const myCourses = [
   {
     id: "1",
-    title: "Desenvolvimento Web Completo com React e Next.js",
+    titulo: "Desenvolvimento Web Completo com React e Next.js",
     description: "Aprenda a criar aplicações web modernas do zero com as tecnologias mais demandadas do mercado.",
     instructor: "Maria Silva",
     thumbnail: "/web-development-coding.png",
@@ -19,7 +19,7 @@ const myCourses = [
   },
   {
     id: "2",
-    title: "Python para Ciência de Dados e Machine Learning",
+    titulo: "Python para Ciência de Dados e Machine Learning",
     description: "Domine Python e suas bibliotecas para análise de dados, visualização e aprendizado de máquina.",
     instructor: "João Santos",
     thumbnail: "/python-data-science.png",

@@ -10,7 +10,7 @@ import { Clock, Users, BookOpen, Star, Play, Edit } from "lucide-react"
 const courseData = {
   "1": {
     id: "1",
-    title: "Desenvolvimento Web Completo com React e Next.js",
+    titulo: "Desenvolvimento Web Completo com React e Next.js",
     description:
       "Aprenda a criar aplicações web modernas do zero com as tecnologias mais demandadas do mercado. Este curso abrangente cobre desde os fundamentos até técnicas avançadas de desenvolvimento.",
     longDescription:
@@ -25,16 +25,16 @@ const courseData = {
     level: "Intermediário",
     category: "Desenvolvimento",
     lessons: [
-      { id: "1", title: "Introdução ao Curso", duration: "10:30", completed: false },
-      { id: "2", title: "Configurando o Ambiente de Desenvolvimento", duration: "15:45", completed: false },
-      { id: "3", title: "Fundamentos do React", duration: "25:20", completed: false },
-      { id: "4", title: "Componentes e Props", duration: "30:15", completed: false },
-      { id: "5", title: "State e Lifecycle", duration: "28:40", completed: false },
-      { id: "6", title: "Hooks do React", duration: "35:25", completed: false },
-      { id: "7", title: "Introdução ao Next.js", duration: "20:10", completed: false },
-      { id: "8", title: "Roteamento no Next.js", duration: "22:35", completed: false },
-      { id: "9", title: "Server Components", duration: "30:50", completed: false },
-      { id: "10", title: "Projeto Final", duration: "45:00", completed: false },
+      { id: "1", titulo: "Introdução ao Curso", duration: "10:30", completed: false },
+      { id: "2", titulo: "Configurando o Ambiente de Desenvolvimento", duration: "15:45", completed: false },
+      { id: "3", titulo: "Fundamentos do React", duration: "25:20", completed: false },
+      { id: "4", titulo: "Componentes e Props", duration: "30:15", completed: false },
+      { id: "5", titulo: "State e Lifecycle", duration: "28:40", completed: false },
+      { id: "6", titulo: "Hooks do React", duration: "35:25", completed: false },
+      { id: "7", titulo: "Introdução ao Next.js", duration: "20:10", completed: false },
+      { id: "8", titulo: "Roteamento no Next.js", duration: "22:35", completed: false },
+      { id: "9", titulo: "Server Components", duration: "30:50", completed: false },
+      { id: "10", titulo: "Projeto Final", duration: "45:00", completed: false },
     ],
   },
 }
@@ -77,7 +77,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                   <Badge variant="secondary">{course.category}</Badge>
                   <Badge variant="outline">{course.level}</Badge>
                 </div>
-                <h1 className="text-3xl md:text-4xl font-bold mb-4 text-balance">{course.title}</h1>
+                <h1 className="text-3xl md:text-4xl font-bold mb-4 text-balance">{course.titulo}</h1>
                 <p className="text-lg text-muted-foreground mb-6 text-pretty">{course.description}</p>
                 <div className="flex flex-wrap items-center gap-6 text-sm">
                   <div className="flex items-center gap-2">
@@ -110,7 +110,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                   <div className="aspect-video w-full overflow-hidden rounded-t-lg bg-muted">
                     <img
                       src={course.thumbnail || "/placeholder.svg"}
-                      alt={course.title}
+                      alt={course.titulo}
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -177,7 +177,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                               {index + 1}
                             </div>
                             <div>
-                              <div className="font-medium">{lesson.title}</div>
+                              <div className="font-medium">{lesson.titulo}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">

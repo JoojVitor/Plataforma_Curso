@@ -8,7 +8,7 @@ import { Search, Filter } from "lucide-react"
 const allCourses = [
   {
     id: "1",
-    title: "Desenvolvimento Web Completo com React e Next.js",
+    titulo: "Desenvolvimento Web Completo com React e Next.js",
     description: "Aprenda a criar aplicações web modernas do zero com as tecnologias mais demandadas do mercado.",
     instructor: "Maria Silva",
     thumbnail: "/web-development-coding.png",
@@ -17,7 +17,7 @@ const allCourses = [
   },
   {
     id: "2",
-    title: "Python para Ciência de Dados e Machine Learning",
+    titulo: "Python para Ciência de Dados e Machine Learning",
     description: "Domine Python e suas bibliotecas para análise de dados, visualização e aprendizado de máquina.",
     instructor: "João Santos",
     thumbnail: "/python-data-science.png",
@@ -26,7 +26,7 @@ const allCourses = [
   },
   {
     id: "3",
-    title: "Design UI/UX: Do Conceito ao Protótipo",
+    titulo: "Design UI/UX: Do Conceito ao Protótipo",
     description: "Aprenda os fundamentos de design de interfaces e experiência do usuário com projetos práticos.",
     instructor: "Ana Costa",
     thumbnail: "/ui-ux-design-concept.png",
@@ -35,7 +35,7 @@ const allCourses = [
   },
   {
     id: "4",
-    title: "JavaScript Moderno: ES6+ e Além",
+    titulo: "JavaScript Moderno: ES6+ e Além",
     description: "Domine as features modernas do JavaScript e escreva código mais limpo e eficiente.",
     instructor: "Carlos Oliveira",
     thumbnail: "/javascript-programming.png",
@@ -44,7 +44,7 @@ const allCourses = [
   },
   {
     id: "5",
-    title: "Marketing Digital e Redes Sociais",
+    titulo: "Marketing Digital e Redes Sociais",
     description: "Aprenda estratégias de marketing digital para impulsionar seu negócio nas redes sociais.",
     instructor: "Fernanda Lima",
     thumbnail: "/digital-marketing-social-media.png",
@@ -53,7 +53,7 @@ const allCourses = [
   },
   {
     id: "6",
-    title: "Fotografia Profissional para Iniciantes",
+    titulo: "Fotografia Profissional para Iniciantes",
     description: "Descubra os fundamentos da fotografia e aprenda a capturar imagens incríveis.",
     instructor: "Roberto Alves",
     thumbnail: "/professional-photography-camera.jpg",
