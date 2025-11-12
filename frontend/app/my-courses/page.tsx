@@ -6,30 +6,13 @@ import { Navbar } from "@/components/navbar"
 import { CourseCard } from "@/components/course-card"
 import { ProtectedRoute } from "@/lib/protected-route"
 import { useAuth } from "@/lib/auth-context"
-
-const myCourses = [
-  {
-    id: "1",
-    titulo: "Desenvolvimento Web Completo com React e Next.js",
-    description: "Aprenda a criar aplicações web modernas do zero com as tecnologias mais demandadas do mercado.",
-    instructor: "Maria Silva",
-    thumbnail: "/web-development-coding.png",
-    duration: "40h",
-    students: 1234,
-  },
-  {
-    id: "2",
-    titulo: "Python para Ciência de Dados e Machine Learning",
-    description: "Domine Python e suas bibliotecas para análise de dados, visualização e aprendizado de máquina.",
-    instructor: "João Santos",
-    thumbnail: "/python-data-science.png",
-    duration: "35h",
-    students: 892,
-  },
-]
+import { useCourses } from "@/hooks/use-courses"
 
 export default function MyCoursesPage() {
   const { user } = useAuth()
+  const { cursos, isLoading, error } = useCourses()
+
+  const meusCursos = cursos.filter((curso) => curso.instrutor._id === user?.id)
 
   return (
     <ProtectedRoute>
@@ -40,23 +23,38 @@ export default function MyCoursesPage() {
           <div className="bg-muted/30 border-b border-border py-8 px-4">
             <div className="container max-w-6xl mx-auto">
               <h1 className="text-3xl md:text-4xl font-bold mb-2">Meus Cursos</h1>
-              <p className="text-muted-foreground">Continue aprendendo de onde parou</p>
+              <p className="text-muted-foreground">Manage seus cursos criados</p>
             </div>
           </div>
 
           <div className="py-8 px-4">
             <div className="container max-w-6xl mx-auto">
-              {myCourses.length > 0 ? (
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <p className="text-muted-foreground">Carregando seus cursos...</p>
+                </div>
+              ) : error ? (
+                <div className="flex items-center justify-center py-12">
+                  <p className="text-destructive">Erro ao carregar cursos: {error}</p>
+                </div>
+              ) : meusCursos.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {myCourses.map((course) => (
-                    <CourseCard key={course.id} {...course} />
+                  {meusCursos.map((course) => (
+                    <CourseCard
+                      key={course._id}
+                      id={course._id}
+                      titulo={course.titulo}
+                      description={course.descricao}
+                      instructor={course.instrutor.nome}
+                      thumbnail="/curso-placeholder.jpg"
+                    />
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground mb-4">Você ainda não está inscrito em nenhum curso</p>
+                  <p className="text-muted-foreground mb-4">Você ainda não criou nenhum curso</p>
                   <Button asChild>
-                    <Link href="/courses">Explorar Cursos</Link>
+                    <Link href="/courses/create">Criar Seu Primeiro Curso</Link>
                   </Button>
                 </div>
               )}

@@ -8,14 +8,18 @@ import { Button } from "@/components/ui/button"
 import { BookOpen, Users, TrendingUp, Plus } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
+import { useCourses } from "@/hooks/use-courses"
 
 export default function DashboardPage() {
   const { user } = useAuth()
+  const { cursos, isLoading, error } = useCourses()
+
+  const meusCursos = cursos.filter((curso) => curso.instrutor._id === user?.id)
 
   return (
     <ProtectedRoute requiredRole={["instrutor", "admin"]}>
       <div className="min-h-screen flex flex-col">
-        <Navbar user={user} />
+        <Navbar />
 
         <div className="flex-1 flex">
           <Sidebar userRole={user?.role === "admin" ? "admin" : "instrutor"} />
@@ -43,8 +47,8 @@ export default function DashboardPage() {
                     <BookOpen className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">12</div>
-                    <p className="text-xs text-muted-foreground mt-1">+2 este mês</p>
+                    <div className="text-2xl font-bold">{meusCursos.length}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Cursos publicados</p>
                   </CardContent>
                 </Card>
 
@@ -77,37 +81,46 @@ export default function DashboardPage() {
                   <CardTitle>Meus Cursos Recentes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {[
-                      { titulo: "Desenvolvimento Web com React", students: 1234, status: "Publicado" },
-                      { titulo: "Python para Iniciantes", students: 892, status: "Publicado" },
-                      { titulo: "Design UI/UX Avançado", students: 567, status: "Rascunho" },
-                    ].map((course, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-4 border border-border rounded-lg"
-                      >
-                        <div>
-                          <h3 className="font-medium">{course.titulo}</h3>
-                          <p className="text-sm text-muted-foreground">{course.students} alunos inscritos</p>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <p className="text-muted-foreground">Carregando cursos...</p>
+                    </div>
+                  ) : error ? (
+                    <div className="flex items-center justify-center py-8">
+                      <p className="text-destructive">Erro ao carregar cursos: {error}</p>
+                    </div>
+                  ) : meusCursos.length > 0 ? (
+                    <div className="space-y-4">
+                      {meusCursos.map((course) => (
+                        <div
+                          key={course._id}
+                          className="flex items-center justify-between p-4 border border-border rounded-lg"
+                        >
+                          <div>
+                            <h3 className="font-medium">{course.titulo}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {course.aulas.length} aulas · {course.descricao.substring(0, 50)}...
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                              Publicado
+                            </span>
+                            <Button variant="outline" size="sm" asChild className="bg-transparent">
+                              <Link href={`/courses/${course._id}`}>Ver</Link>
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <span
-                            className={`text-xs px-2 py-1 rounded-full ${
-                              course.status === "Publicado"
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                            }`}
-                          >
-                            {course.status}
-                          </span>
-                          <Button variant="outline" size="sm" className="bg-transparent">
-                            Editar
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground mb-4">Você ainda não criou nenhum curso</p>
+                      <Button asChild>
+                        <Link href="/courses/create">Criar Primeiro Curso</Link>
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

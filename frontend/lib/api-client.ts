@@ -2,18 +2,16 @@ export class ApiClient {
   private static baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
   static async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const headers: HeadersInit = {
-      ...options?.headers,
-    };
+    const headers = new Headers(options?.headers || {});
 
-    if (!headers["Content-Type"] && !(options?.body instanceof FormData)) {
-      headers["Content-Type"] = "application/json";
+    if (!headers.has("Content-Type") && !(options?.body instanceof FormData)) {
+      headers.set("Content-Type", "application/json");
     }
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
       headers,
-      credentials: "include", // 🔑 envia cookies automaticamente
+      credentials: "include",
     });
 
     if (!response.ok) {
