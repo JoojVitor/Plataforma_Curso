@@ -6,7 +6,6 @@ import User from "../models/User";
 
 const router = Router();
 
-// Registrar usuário
 router.post("/register", async (req, res) => {
   try {
     const { nome, email, senha, role } = req.body;
@@ -31,7 +30,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Login
 router.post("/login", async (req, res) => {
   try {
     const { email, senha } = req.body;
@@ -47,7 +45,7 @@ router.post("/login", async (req, res) => {
         id: user._id,
         email: user.email,
         role: user.role,
-        nome: user.nome // <-- ADICIONE ISSO
+        nome: user.nome
       },
       process.env.JWT_SECRET as string,
       { expiresIn: "1h" }
@@ -63,7 +61,6 @@ router.post("/login", async (req, res) => {
 
     res.status(200).json({
       message: "Login bem-sucedido",
-      // Envie os dados do usuário na resposta do login
       user: {
         id: user._id,
         nome: user.nome,
@@ -77,13 +74,10 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Rota "Quem sou eu"
 router.get("/me", authMiddleware, (req: any, res) => {
-  // O authMiddleware já validou o token e anexou o usuário (req.user)
   if (!req.user) {
     return res.status(401).json({ message: "Não autorizado" });
   }
-  // Retorna os dados do usuário do payload do token
   res.status(200).json(req.user);
 });
 

@@ -1,18 +1,14 @@
-// backend/src/middleware/authMiddleware.ts
-
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-// Estendemos a interface Request para incluir 'user' e 'cookies'
-interface AuthRequest extends Request {
+export interface AuthRequest extends Request {
   user?: any;
   cookies: {
-    authToken?: string; // Definimos o cookie que esperamos
+    authToken?: string;
   };
 }
 
 export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
-  // 1. Obter o token do cookie
   const token = req.cookies?.authToken;
 
   if (!token) {
@@ -20,7 +16,6 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
   }
 
   try {
-    // 2. Verificar o token
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
     req.user = decoded;
     next();

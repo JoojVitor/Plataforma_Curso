@@ -1,128 +1,103 @@
-"use client"
+"use client";
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
 interface User {
-    id: string;
-    nome: string;
-    email: string;
-    role: "aluno" | "instrutor" | "admin";
-    avatar: any;
+  id: string;
+  nome: string;
+  email: string;
+  role: "aluno" | "instrutor" | "admin";
+  avatar?: string;
 }
 
 interface AuthContextType {
-  user: User | null
-  isLoading: boolean
-  isAuthenticated: boolean
-  login: (email: string, senha: string) => Promise<void>
-  register: (email: string, senha: string, nome: string, role: string) => Promise<void>
-  logout: () => void
+  user: User | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  login: (email: string, senha: string) => Promise<void>;
+  register: (email: string, senha: string, nome: string, role: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user")
-    const storedToken = localStorage.getItem("authToken")
-
-    if (storedUser && storedToken) {
+    const checkSession = async () => {
       try {
-        setUser(JSON.parse(storedUser))
-      } catch (error) {
-        console.error("Failed to parse stored user:", error)
-        localStorage.removeItem("user")
-        localStorage.removeItem("authToken")
+        const res = await fetch("http://localhost:4000/api/auth/me", {
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      } catch {
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false)
-  }, [])
+    };
+    checkSession();
+  }, []);
 
   const login = async (email: string, senha: string) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:4000/api/auth/login", {
+      const res = await fetch("http://localhost:4000/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, senha }),
-      })
+      });
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Login failed")
-      }
-
-      const data = await response.json()
-      const { token, user: userData } = data
-
-      localStorage.setItem("authToken", token)
-      localStorage.setItem("user", JSON.stringify(userData))
-      setUser(userData)
-    } catch (error) {
-      console.error("Login error:", error)
-      throw error
+      if (!res.ok) throw new Error("Falha no login");
+      const data = await res.json();
+      setUser(data.user);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const register = async (email: string, senha: string, nome: string, role: string) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:4000/api/auth/register", {
+      const res = await fetch("http://localhost:4000/api/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, senha, nome, role }),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Registration failed")
-      }
-
-      const data = await response.json()
-      const { token, user: userData } = data
-
-      localStorage.setItem("authToken", token)
-      localStorage.setItem("user", JSON.stringify(userData))
-      setUser(userData)
-    } catch (error) {
-      console.error("Register error:", error)
-      throw error
+      });
+      if (!res.ok) throw new Error("Falha no registro");
+      const data = await res.json();
+      setUser(data.user);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const logout = () => {
-    localStorage.removeItem("authToken")
-    localStorage.removeItem("user")
-    setUser(null)
-  }
+  const logout = async () => {
+    await fetch("http://localhost:4000/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+    setUser(null);
+  };
 
-  const value: AuthContextType = {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
-    login,
-    register,
-    logout,
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, isLoading, isAuthenticated: !!user, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error("useAuth must be used within AuthProvider")
-  }
-  return context
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
+  return context;
 }
