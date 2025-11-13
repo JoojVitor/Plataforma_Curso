@@ -38,13 +38,21 @@ router.get("/me", authMiddleware, async (req: AuthRequest, res) => {
     }
 
     const enrollments = await Enrollment.find({ aluno: req.user.id })
-      .populate("curso", "titulo descricao");
+      .populate({
+        path: "curso",
+        select: "titulo descricao instrutor",
+        populate: {
+          path: "instrutor",
+          select: "nome email"
+        }
+      });
 
     res.json(enrollments);
   } catch (error) {
     res.status(500).json({ message: "Erro ao buscar inscrições", error });
   }
 });
+
 
 // Listar alunos inscritos em um curso (somente instrutor dono do curso)
 router.get("/course/:courseId", authMiddleware, async (req: AuthRequest, res) => {

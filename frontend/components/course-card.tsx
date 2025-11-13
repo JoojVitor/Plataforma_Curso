@@ -7,13 +7,13 @@ interface CourseCardProps {
   id: string
   titulo: string
   description: string
-  instructor: string
+  instrutor: string
   thumbnail?: string
   duration?: string
   students?: number
 }
 
-export function CourseCard({ id, titulo, description, instructor, thumbnail, duration, students }: CourseCardProps) {
+export function CourseCard({ id, titulo, description, instrutor, thumbnail, duration, students }: CourseCardProps) {
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-lg">
       <div className="aspect-video w-full overflow-hidden bg-muted">
@@ -27,7 +27,7 @@ export function CourseCard({ id, titulo, description, instructor, thumbnail, dur
       </div>
       <CardHeader>
         <h3 className="text-lg font-semibold leading-tight line-clamp-2 text-balance">{titulo}</h3>
-        <p className="text-sm text-muted-foreground">{instructor}</p>
+        <p className="text-sm text-muted-foreground">{instrutor}</p>
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground line-clamp-2 text-pretty">{description}</p>
