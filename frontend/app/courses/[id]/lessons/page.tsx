@@ -1,46 +1,131 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { ApiClient } from "@/lib/api-client"
 
-// Mock data
-const courseData = {
-  id: "1",
+// Tipos
+interface Lesson {
+  id?: string
+  titulo: string
+  url?: string
+  duration?: string
+  completed?: boolean
+}
+
+interface Course {
+  _id: string
+  titulo: string
+  aulas: Lesson[]
+}
+
+// Mock de fallback
+const mockCourseData = {
+  id: "mock",
   titulo: "Desenvolvimento Web Completo com React e Next.js",
   lessons: [
-    { id: "1", titulo: "Introdução ao Curso", duration: "10:30", videoUrl: "#", completed: true },
-    { id: "2", titulo: "Configurando o Ambiente de Desenvolvimento", duration: "15:45", videoUrl: "#", completed: true },
-    { id: "3", titulo: "Fundamentos do React", duration: "25:20", videoUrl: "#", completed: false },
-    { id: "4", titulo: "Componentes e Props", duration: "30:15", videoUrl: "#", completed: false },
-    { id: "5", titulo: "State e Lifecycle", duration: "28:40", videoUrl: "#", completed: false },
-    { id: "6", titulo: "Hooks do React", duration: "35:25", videoUrl: "#", completed: false },
-    { id: "7", titulo: "Introdução ao Next.js", duration: "20:10", videoUrl: "#", completed: false },
-    { id: "8", titulo: "Roteamento no Next.js", duration: "22:35", videoUrl: "#", completed: false },
-    { id: "9", titulo: "Server Components", duration: "30:50", videoUrl: "#", completed: false },
-    { id: "10", titulo: "Projeto Final", duration: "45:00", videoUrl: "#", completed: false },
+    { id: "1", titulo: "Introdução ao Curso", duration: "10:30", completed: true },
+    { id: "2", titulo: "Configurando o Ambiente de Desenvolvimento", duration: "15:45", completed: true },
+    { id: "3", titulo: "Fundamentos do React", duration: "25:20", completed: false },
+    { id: "4", titulo: "Componentes e Props", duration: "30:15", completed: false },
   ],
 }
 
 export default function LessonsPage() {
+  const params = useParams()
+  const id = params?.id as string
+
+  const [course, setCourse] = useState<Course | null>(null)
+  const [lessons, setLessons] = useState<Lesson[]>(mockCourseData.lessons)
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [loading, setLoading] = useState(true)
 
-  const currentLesson = courseData.lessons[currentLessonIndex]
-  const hasNext = currentLessonIndex < courseData.lessons.length - 1
+  // 🔹 Busca as aulas do backend
+  useEffect(() => {
+    const fetchLessons = async () => {
+      try {
+        const data = await ApiClient.get<{ aulas: Lesson[] }>(`/courses/${id}/lessons`)
+        setLessons(data.aulas)
+        setCourse({ _id: id, titulo: "Curso Atual", aulas: data.aulas })
+      } catch (err: any) {
+        console.warn("Falha ao buscar aulas. Usando mock:", err)
+        setCourse({ _id: mockCourseData.id, titulo: mockCourseData.titulo, aulas: mockCourseData.lessons })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchLessons()
+  }, [id])
+
+  useEffect(() => {
+    const updateDurations = async () => {
+      const updated = await Promise.all(
+        lessons.map(async (lesson) => {
+          const src = lesson.url
+          if (!src) return lesson
+
+          return new Promise<Lesson>((resolve) => {
+            const video = document.createElement("video")
+            video.preload = "metadata"
+            video.src = src
+
+            const onLoaded = () => {
+              const seconds = isFinite(video.duration) ? video.duration : 0
+              const minutes = Math.floor(seconds / 60)
+              const secs = Math.floor(seconds % 60)
+              const formatted = `${minutes}:${secs.toString().padStart(2, "0")}`
+              cleanup()
+              resolve({ ...lesson, duration: formatted })
+            }
+
+            const onError = () => {
+              cleanup()
+              resolve({ ...lesson, duration: "--:--" })
+            }
+
+            const cleanup = () => {
+              video.removeEventListener("loadedmetadata", onLoaded)
+              video.removeEventListener("error", onError)
+              // opcional: liberar src para economizar memória
+              try {
+                video.src = ""
+              } catch { }
+            }
+
+            video.addEventListener("loadedmetadata", onLoaded)
+            video.addEventListener("error", onError)
+
+            // em alguns casos o loadedmetadata já pode ter acontecido antes do addEventListener,
+            // então verificamos readyState rapidamente
+            if (video.readyState >= 1 && isFinite(video.duration)) {
+              onLoaded()
+            }
+          })
+        })
+      )
+
+      setLessons(updated)
+    }
+
+    if (lessons.some((l) => l.url && !l.duration)) {
+      updateDurations()
+    }
+  }, [lessons])
+
+  const currentLesson = lessons[currentLessonIndex]
+  const hasNext = currentLessonIndex < lessons.length - 1
   const hasPrevious = currentLessonIndex > 0
 
-  const goToNext = () => {
-    if (hasNext) setCurrentLessonIndex(currentLessonIndex + 1)
-  }
-
-  const goToPrevious = () => {
-    if (hasPrevious) setCurrentLessonIndex(currentLessonIndex - 1)
-  }
+  const goToNext = () => hasNext && setCurrentLessonIndex((i) => i + 1)
+  const goToPrevious = () => hasPrevious && setCurrentLessonIndex((i) => i - 1)
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -52,15 +137,17 @@ export default function LessonsPage() {
               {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
             <Link
-              href={`/courses/${courseData.id}`}
+              href={`/courses/${course?._id || id}`}
               className="text-sm font-medium hover:text-primary transition-colors"
             >
               <ChevronLeft className="h-4 w-4 inline mr-1" />
               Voltar ao Curso
             </Link>
           </div>
-          <h1 className="text-sm font-medium truncate max-w-md hidden sm:block">{courseData.titulo}</h1>
-          <div className="w-20" /> {/* Spacer for centering */}
+          <h1 className="text-sm font-medium truncate max-w-md hidden sm:block">
+            {course?.titulo || "Carregando curso..."}
+          </h1>
+          <div className="w-20" />
         </div>
       </header>
 
@@ -76,14 +163,14 @@ export default function LessonsPage() {
           <div className="p-4 border-b border-border">
             <h2 className="font-semibold">Conteúdo do Curso</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              {courseData.lessons.filter((l) => l.completed).length} de {courseData.lessons.length} aulas concluídas
+              {lessons.filter((l) => l.completed).length} de {lessons.length} aulas concluídas
             </p>
           </div>
           <ScrollArea className="flex-1">
             <div className="p-2">
-              {courseData.lessons.map((lesson, index) => (
+              {lessons.map((lesson, index) => (
                 <button
-                  key={lesson.id}
+                  key={lesson.id || index}
                   onClick={() => {
                     setCurrentLessonIndex(index)
                     setSidebarOpen(false)
@@ -104,9 +191,14 @@ export default function LessonsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium mb-1 line-clamp-2">{lesson.titulo}</div>
                       <div
-                        className={cn("text-xs", currentLessonIndex === index ? "opacity-90" : "text-muted-foreground")}
+                        className={cn(
+                          "text-xs transition-colors",
+                          currentLessonIndex === index
+                            ? "text-white"
+                            : "text-muted-foreground"
+                        )}
                       >
-                        {lesson.duration}
+                        {lesson.duration || "--:--"}
                       </div>
                     </div>
                   </div>
@@ -120,26 +212,38 @@ export default function LessonsPage() {
         <main className="flex-1 flex flex-col overflow-hidden">
           {/* Video Player */}
           <div className="bg-black aspect-video w-full">
-            <div className="h-full flex items-center justify-center text-white">
-              <div className="text-center">
-                <div className="text-lg mb-2">Player de Vídeo</div>
-                <div className="text-sm text-gray-400">Aula: {currentLesson.titulo}</div>
+            {loading ? (
+              <div className="h-full flex items-center justify-center text-gray-400">Carregando vídeo...</div>
+            ) : currentLesson?.url ? (
+              <video key={currentLesson.url} controls className="h-full w-full">
+                <source src={currentLesson.url} type="video/mp4" />
+                Seu navegador não suporta vídeo.
+              </video>
+            ) : (
+              <div className="h-full flex items-center justify-center text-white text-center">
+                <div>
+                  <p className="text-lg mb-2">Nenhum vídeo disponível</p>
+                  <p className="text-sm text-gray-400">Aula: {currentLesson?.titulo}</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Lesson Info and Navigation */}
           <div className="flex-1 overflow-auto">
             <div className="p-6">
               <div className="max-w-4xl mx-auto">
-                <h2 className="text-2xl font-bold mb-2 text-balance">{currentLesson.titulo}</h2>
-                <p className="text-sm text-muted-foreground mb-6">Duração: {currentLesson.duration}</p>
+                <h2 className="text-2xl font-bold mb-2 text-balance">{currentLesson?.titulo}</h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Duração: {currentLesson?.duration || "Indefinida"}
+                </p>
 
                 <Card className="p-6 mb-6">
                   <h3 className="font-semibold mb-3">Sobre esta aula</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed text-pretty">
-                    Nesta aula, você aprenderá conceitos importantes sobre {currentLesson.titulo.toLowerCase()}.
-                    Acompanhe o vídeo com atenção e pratique os exemplos apresentados para fixar o conteúdo.
+                    {loading
+                      ? "Carregando detalhes da aula..."
+                      : `Nesta aula, você aprenderá conceitos importantes sobre ${currentLesson?.titulo?.toLowerCase()}.`}
                   </p>
                 </Card>
 

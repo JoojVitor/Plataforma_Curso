@@ -1,11 +1,26 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { Navbar } from "@/components/navbar"
 import { CourseCard } from "@/components/course-card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Filter } from "lucide-react"
+import { ApiClient } from "@/lib/api-client"
 
-// Mock data for all courses
-const allCourses = [
+interface Course {
+  _id: string
+  titulo: string
+  descricao: string
+  instrutor: {
+    nome: string
+    email: string
+  }
+  aulas?: { titulo: string; url: string }[]
+}
+
+// Mock data for visual fallback
+const mockCourses = [
   {
     id: "1",
     titulo: "Desenvolvimento Web Completo com React e Next.js",
@@ -73,6 +88,40 @@ const categories = [
 ]
 
 export default function CoursesPage() {
+  const [backendCourses, setBackendCourses] = useState<Course[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const data = await ApiClient.get<Course[]>("/courses")
+        setBackendCourses(data)
+      } catch (err: any) {
+        console.error("Erro ao buscar cursos:", err)
+        setError("Erro ao carregar cursos disponíveis.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCourses()
+  }, [])
+
+  // Combina os mockados com os vindos do backend
+  const combinedCourses = [
+    ...backendCourses.map((course) => ({
+      id: course._id,
+      titulo: course.titulo,
+      description: course.descricao,
+      instructor: course.instrutor?.nome || "Instrutor",
+      thumbnail: "/course-placeholder.png",
+      duration: `${course.aulas?.length || 0} aulas`,
+      students: Math.floor(Math.random() * 500) + 50, // valor mockado
+    })),
+    ...mockCourses,
+  ]
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -124,12 +173,22 @@ export default function CoursesPage() {
         {/* Courses Grid */}
         <div className="py-8 px-4">
           <div className="container max-w-6xl mx-auto">
-            <div className="mb-4 text-sm text-muted-foreground">{allCourses.length} cursos encontrados</div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allCourses.map((course) => (
-                <CourseCard key={course.id} {...course} />
-              ))}
-            </div>
+            {loading ? (
+              <p className="text-muted-foreground text-center py-10">Carregando cursos...</p>
+            ) : error ? (
+              <p className="text-destructive text-center py-10">{error}</p>
+            ) : (
+              <>
+                <div className="mb-4 text-sm text-muted-foreground">
+                  {combinedCourses.length} cursos encontrados
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {combinedCourses.map((course) => (
+                    <CourseCard key={course.id} {...course} />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
