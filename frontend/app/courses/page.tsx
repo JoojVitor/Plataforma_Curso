@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Navbar } from "@/components/navbar"
 import { CourseCard } from "@/components/course-card"
 import { Input } from "@/components/ui/input"
@@ -16,64 +16,43 @@ interface Course {
     nome: string
     email: string
   }
+  categoria?: string
   aulas?: { titulo: string; url: string }[]
 }
 
-// Mock data for visual fallback
+// Mock para visual
 const mockCourses = [
   {
     id: "1",
     titulo: "Desenvolvimento Web Completo com React e Next.js",
-    description: "Aprenda a criar aplicações web modernas do zero com as tecnologias mais demandadas do mercado.",
-    instructor: "Maria Silva",
+    descricao:
+      "Aprenda a criar aplicações web modernas do zero com as tecnologias mais demandadas do mercado.",
+    instrutor: "Maria Silva",
     thumbnail: "/web-development-coding.png",
     duration: "40h",
     students: 1234,
+    categoria: "Desenvolvimento",
   },
   {
     id: "2",
     titulo: "Python para Ciência de Dados e Machine Learning",
-    description: "Domine Python e suas bibliotecas para análise de dados, visualização e aprendizado de máquina.",
-    instructor: "João Santos",
+    descricao:
+      "Domine Python e suas bibliotecas para análise de dados, visualização e aprendizado de máquina.",
+    instrutor: "João Santos",
     thumbnail: "/python-data-science.png",
     duration: "35h",
     students: 892,
+    categoria: "Ciência de Dados",
   },
   {
     id: "3",
     titulo: "Design UI/UX: Do Conceito ao Protótipo",
-    description: "Aprenda os fundamentos de design de interfaces e experiência do usuário com projetos práticos.",
-    instructor: "Ana Costa",
+    descricao: "Aprenda os fundamentos de design de interfaces e experiência do usuário.",
+    instrutor: "Ana Costa",
     thumbnail: "/ui-ux-design-concept.png",
     duration: "25h",
     students: 567,
-  },
-  {
-    id: "4",
-    titulo: "JavaScript Moderno: ES6+ e Além",
-    description: "Domine as features modernas do JavaScript e escreva código mais limpo e eficiente.",
-    instructor: "Carlos Oliveira",
-    thumbnail: "/javascript-programming.png",
-    duration: "30h",
-    students: 1456,
-  },
-  {
-    id: "5",
-    titulo: "Marketing Digital e Redes Sociais",
-    description: "Aprenda estratégias de marketing digital para impulsionar seu negócio nas redes sociais.",
-    instructor: "Fernanda Lima",
-    thumbnail: "/digital-marketing-social-media.png",
-    duration: "20h",
-    students: 789,
-  },
-  {
-    id: "6",
-    titulo: "Fotografia Profissional para Iniciantes",
-    description: "Descubra os fundamentos da fotografia e aprenda a capturar imagens incríveis.",
-    instructor: "Roberto Alves",
-    thumbnail: "/professional-photography-camera.jpg",
-    duration: "15h",
-    students: 432,
+    categoria: "Design",
   },
 ]
 
@@ -92,6 +71,10 @@ export default function CoursesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("Todas as Categorias")
+  const [sortOption, setSortOption] = useState("popular")
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -108,19 +91,44 @@ export default function CoursesPage() {
     fetchCourses()
   }, [])
 
-  // Combina os mockados com os vindos do backend
-  const combinedCourses = [
-    ...backendCourses.map((course) => ({
+  const combinedCourses = useMemo(() => {
+    const backFormatted = backendCourses.map((course) => ({
       id: course._id,
       titulo: course.titulo,
-      description: course.descricao,
-      instructor: course.instrutor?.nome || "Instrutor",
+      descricao: course.descricao,
+      instrutor: course.instrutor?.nome || "Instrutor",
       thumbnail: "/course-placeholder.png",
       duration: `${course.aulas?.length || 0} aulas`,
-      students: Math.floor(Math.random() * 500) + 50, // valor mockado
-    })),
-    ...mockCourses,
-  ]
+      students: Math.floor(Math.random() * 500) + 50,
+      categoria: course.categoria || "Desenvolvimento",
+    }))
+
+    return [...backFormatted, ...mockCourses]
+  }, [backendCourses])
+
+  const filteredCourses = useMemo(() => {
+    let result = [...combinedCourses]
+
+    if (searchTerm.trim()) {
+      result = result.filter((c) =>
+        (c.titulo + c.descricao)
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      )
+    }
+
+    if (selectedCategory !== "Todas as Categorias") {
+      result = result.filter((c) => c.categoria === selectedCategory)
+    }
+
+    if (sortOption === "recent") {
+      result.sort((a, b) => (a.id < b.id ? 1 : -1))
+    } else if (sortOption === "rating") {
+      result.sort((a, b) => b.students - a.students)
+    }
+
+    return result
+  }, [combinedCourses, searchTerm, selectedCategory, sortOption])
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -139,24 +147,46 @@ export default function CoursesPage() {
         <div className="border-b border-border py-6 px-4">
           <div className="container max-w-6xl mx-auto">
             <div className="flex flex-col md:flex-row gap-4">
+              
+              {/* 🔍 Busca */}
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input type="search" placeholder="Buscar cursos..." className="pl-10" />
+                <Input
+                  type="search"
+                  placeholder="Buscar cursos..."
+                  className="pl-10"
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-              <Select defaultValue="all">
+
+              {/* Categorias */}
+              <Select
+                value={selectedCategory}
+                onValueChange={(val) =>
+                  setSelectedCategory(
+                    categories.find((c) => c.toLowerCase().replace(/\s+/g, "-") === val) ||
+                      "Todas as Categorias"
+                  )
+                }
+              >
                 <SelectTrigger className="w-full md:w-64">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Categoria" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((category) => (
-                    <SelectItem key={category} value={category.toLowerCase().replace(/\s+/g, "-")}>
+                    <SelectItem
+                      key={category}
+                      value={category.toLowerCase().replace(/\s+/g, "-")}
+                    >
                       {category}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Select defaultValue="popular">
+
+              {/* Ordenação */}
+              <Select value={sortOption} onValueChange={setSortOption}>
                 <SelectTrigger className="w-full md:w-48">
                   <SelectValue placeholder="Ordenar por" />
                 </SelectTrigger>
@@ -166,6 +196,7 @@ export default function CoursesPage() {
                   <SelectItem value="rating">Melhor Avaliados</SelectItem>
                 </SelectContent>
               </Select>
+
             </div>
           </div>
         </div>
@@ -174,17 +205,29 @@ export default function CoursesPage() {
         <div className="py-8 px-4">
           <div className="container max-w-6xl mx-auto">
             {loading ? (
-              <p className="text-muted-foreground text-center py-10">Carregando cursos...</p>
+              <p className="text-muted-foreground text-center py-10">
+                Carregando cursos...
+              </p>
             ) : error ? (
               <p className="text-destructive text-center py-10">{error}</p>
             ) : (
               <>
                 <div className="mb-4 text-sm text-muted-foreground">
-                  {combinedCourses.length} cursos encontrados
+                  {filteredCourses.length} cursos encontrados
                 </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {combinedCourses.map((course) => (
-                    <CourseCard key={course.id} {...course} />
+                  {filteredCourses.map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      id={course.id}
+                      titulo={course.titulo}
+                      descricao={course.descricao}
+                      instrutor={course.instrutor}
+                      thumbnail={course.thumbnail}
+                      duration={course.duration}
+                      students={course.students}
+                    />
                   ))}
                 </div>
               </>
