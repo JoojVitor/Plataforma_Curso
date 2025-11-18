@@ -10,7 +10,6 @@ import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Menu, X } from "lucide
 import { cn } from "@/lib/utils"
 import { ApiClient } from "@/lib/api-client"
 
-// Tipos
 interface Lesson {
   id?: string
   titulo: string
@@ -47,7 +46,6 @@ export default function LessonsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [loading, setLoading] = useState(true)
 
-  // 🔹 Busca as aulas do backend
   useEffect(() => {
     const fetchLessons = async () => {
       try {
@@ -94,7 +92,6 @@ export default function LessonsPage() {
             const cleanup = () => {
               video.removeEventListener("loadedmetadata", onLoaded)
               video.removeEventListener("error", onError)
-              // opcional: liberar src para economizar memória
               try {
                 video.src = ""
               } catch { }
@@ -103,8 +100,6 @@ export default function LessonsPage() {
             video.addEventListener("loadedmetadata", onLoaded)
             video.addEventListener("error", onError)
 
-            // em alguns casos o loadedmetadata já pode ter acontecido antes do addEventListener,
-            // então verificamos readyState rapidamente
             if (video.readyState >= 1 && isFinite(video.duration)) {
               onLoaded()
             }

@@ -27,7 +27,7 @@ export default function MyCoursesPage() {
   const [myEnrollments, setMyEnrollments] = useState<Enrollment[]>([])
   const [loadingEnrollments, setLoadingEnrollments] = useState(true)
 
-  const isInstructor = user?.role === "instrutor" || user?.role === "admin"
+  const isInstrutor = user?.role === "instrutor" || user?.role === "admin"
   const isStudent = user?.role === "aluno"
 
   useEffect(() => {
@@ -85,7 +85,7 @@ export default function MyCoursesPage() {
                           key={enroll.curso._id}
                           id={enroll.curso._id}
                           titulo={enroll.curso.titulo}
-                          description={enroll.curso.descricao}
+                          descricao={enroll.curso.descricao}
                           instrutor={enroll.curso.instrutor.nome}
                           thumbnail="/curso-placeholder.jpg"
                         />
@@ -103,7 +103,7 @@ export default function MyCoursesPage() {
               )}
 
               {/* INSTRUTOR */}
-              {isInstructor && (
+              {isInstrutor && (
                 <>
                   {isLoading ? (
                     <div className="flex items-center justify-center py-12">
@@ -120,7 +120,7 @@ export default function MyCoursesPage() {
                           key={course._id}
                           id={course._id}
                           titulo={course.titulo}
-                          description={course.descricao}
+                          descricao={course.descricao}
                           instrutor={course.instrutor.nome}
                           thumbnail="/curso-placeholder.jpg"
                         />

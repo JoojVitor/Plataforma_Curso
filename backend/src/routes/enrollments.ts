@@ -5,7 +5,6 @@ import Course from "../models/Course";
 
 const router = Router();
 
-// Inscrever-se em um curso (somente aluno)
 router.post("/:courseId", authMiddleware, async (req: AuthRequest, res) => {
   try {
     if (req.user.role !== "aluno") {
@@ -30,7 +29,6 @@ router.post("/:courseId", authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
-// Listar cursos em que o aluno está inscrito
 router.get("/me", authMiddleware, async (req: AuthRequest, res) => {
   try {
     if (req.user.role !== "aluno") {
@@ -53,8 +51,6 @@ router.get("/me", authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
-
-// Listar alunos inscritos em um curso (somente instrutor dono do curso)
 router.get("/course/:courseId", authMiddleware, async (req: AuthRequest, res) => {
   try {
     if (req.user.role !== "instrutor") {
@@ -77,7 +73,6 @@ router.get("/course/:courseId", authMiddleware, async (req: AuthRequest, res) =>
   }
 });
 
-// Cancelar inscrição em um curso (somente aluno)
 router.delete("/:courseId", authMiddleware, async (req: AuthRequest, res) => {
   try {
     if (req.user.role !== "aluno") {
