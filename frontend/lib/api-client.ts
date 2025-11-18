@@ -59,6 +59,18 @@ export class ApiClient {
     return this.post<T>("/courses", courseData);
   }
 
+  static async updateCourse<T>(id: string, payload: any): Promise<T> {
+    return this.put<T>(`/courses/${id}`, payload);
+  }
+
+  static async getCourseById<T>(id: string): Promise<T> {
+    return this.get<T>(`/courses/${id}`);
+  }
+
+  static async deleteCourse(id: string) {
+    return this.delete(`/courses/${id}`);
+  }
+
   static async uploadVideo(fileName: string, contentType: string) {
     return this.post<{ uploadUrl: string; key: string }>("/upload", {
       fileName,

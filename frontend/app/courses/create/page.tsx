@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
@@ -34,7 +34,11 @@ interface CourseFormData {
   aulas: Lesson[]
 }
 
-export default function CreateCoursePage() {
+interface CreateCoursePageProps {
+  existingCourse?: any
+}
+
+export default function CreateCoursePage({ existingCourse }: CreateCoursePageProps) {
   const { user } = useAuth()
   const router = useRouter()
 
@@ -49,6 +53,25 @@ export default function CreateCoursePage() {
   const [lessons, setLessons] = useState<Lesson[]>([{ id: "1", titulo: "", url: "" }])
   const [submitting, setSubmitting] = useState(false)
   const [uploadingLessonId, setUploadingLessonId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (existingCourse) {
+      const normalizedLessons = existingCourse.aulas.map((lesson: any) => ({
+        ...lesson,
+        id: lesson.id || lesson._id || String(Date.now() + Math.random()),
+      }));
+
+      setCourseData({
+        titulo: existingCourse.titulo,
+        descricao: existingCourse.descricao,
+        categoria: existingCourse.categoria,
+        nivel: existingCourse.nivel,
+        aulas: normalizedLessons,
+      });
+
+      setLessons(normalizedLessons);
+    }
+  }, [existingCourse]);
 
   const addLesson = () => {
     const newLesson: Lesson = {
@@ -78,7 +101,6 @@ export default function CreateCoursePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validate required fields
     if (!courseData.titulo.trim()) {
       toast("Campo obrigatório", {
         description: "Por favor, preencha o título do curso"
@@ -103,11 +125,27 @@ export default function CreateCoursePage() {
     setSubmitting(true)
 
     try {
-      console.log("[v0] Submitting course with payload:", {
+      console.log("[Submitting course with payload:", {
         titulo: courseData.titulo,
         descricao: courseData.descricao,
         aulas: lessons,
       })
+
+      if (existingCourse) {
+        await ApiClient.updateCourse(existingCourse._id || existingCourse.id, {
+          titulo: courseData.titulo,
+          descricao: courseData.descricao,
+          categoria: courseData.categoria || "",
+          nivel: courseData.nivel || "",
+          aulas: lessons,
+        });
+
+        toast("Sucesso!", {
+          description: "Curso atualizado com sucesso!",
+        });
+
+        return router.push("/my-courses");
+      }
 
       await ApiClient.createCourse({
         titulo: courseData.titulo,
@@ -115,18 +153,16 @@ export default function CreateCoursePage() {
         categoria: courseData.categoria || "",
         nivel: courseData.nivel || "",
         aulas: lessons,
-      })
+      });
 
       toast("Sucesso!", {
-        description: "Curso criado com sucesso. Redirecionando...",
-      })
+        description: "Curso criado com sucesso!",
+      });
 
-      // Redirect to dashboard after 2 seconds
-      setTimeout(() => {
-        router.push("/dashboard")
-      }, 2000)
+      return router.push("/dashboard");
+
     } catch (error) {
-      console.error("[v0] Course creation error:", error)
+      console.error("Course creation error:", error)
       const errorMessage = error instanceof Error ? error.message : "Erro ao criar curso"
 
       toast("Erro ao criar curso", {
