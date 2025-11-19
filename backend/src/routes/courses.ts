@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getSignedVideoUrl } from "../utils/s3";
+import { deleteFromS3, getSignedVideoUrl } from "../utils/s3";
 import { authMiddleware, AuthRequest } from "../middleware/authMiddleware";
 import Course from "../models/Course";
 import Enrollment from "../models/Enrollment";
@@ -100,7 +100,16 @@ router.delete("/:id", authMiddleware, async (req: AuthRequest, res) => {
       return res.status(403).json({ message: "Você não tem permissão para excluir este curso" });
     }
 
+    for (const aula of course.aulas) {
+      try {
+        await deleteFromS3(aula.url);
+      } catch (err) {
+        console.error("Erro ao deletar vídeo do S3:", err);
+      }
+    }
+
     await course.deleteOne();
+
     res.json({ message: "Curso removido com sucesso" });
   } catch (error) {
     res.status(500).json({ message: "Erro ao excluir curso", error });
