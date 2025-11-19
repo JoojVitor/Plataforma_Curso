@@ -1,59 +1,55 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Navbar } from "@/components/navbar"
-import { Sidebar } from "@/components/sidebar"
-import { ProtectedRoute } from "@/lib/protected-route"
-import { VideoUpload } from "@/components/video-upload"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Trash2, GripVertical, Loader2 } from "lucide-react"
-import { useAuth } from "@/lib/auth-context"
-import { toast } from "sonner"
-import { ApiClient } from "@/lib/api-client"
+import type React from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Navbar } from "@/components/navbar";
+import { Sidebar } from "@/components/sidebar";
+import { ProtectedRoute } from "@/lib/protected-route";
+import { VideoUpload } from "@/components/video-upload";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Trash2, GripVertical, Loader2 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { toast } from "sonner";
+import { ApiClient } from "@/lib/api-client";
 
 interface Lesson {
-  id: string
-  titulo: string
-  url: string
-}
-
-interface CourseFormData {
-  titulo: string
-  descricao: string
-  categoria?: string
-  nivel?: string
-  aulas: Lesson[]
+  id: string;
+  titulo: string;
+  url: string;
 }
 
 interface CreateCoursePageProps {
-  existingCourse?: any
+  existingCourse?: any;
 }
 
 export default function CreateCoursePage({ existingCourse }: CreateCoursePageProps) {
-  const { user } = useAuth()
-  const router = useRouter()
+  const { user } = useAuth();
+  const router = useRouter();
 
-  const [courseData, setCourseData] = useState<CourseFormData>({
+  const [courseData, setCourseData] = useState({
     titulo: "",
     descricao: "",
     categoria: "",
     nivel: "",
-    aulas: [{ id: "1", titulo: "", url: "" }],
-  })
+  });
 
-  const [lessons, setLessons] = useState<Lesson[]>([{ id: "1", titulo: "", url: "" }])
-  const [submitting, setSubmitting] = useState(false)
-  const [uploadingLessonId, setUploadingLessonId] = useState<string | null>(null)
+  const [lessons, setLessons] = useState<Lesson[]>([
+    { id: "1", titulo: "", url: "" },
+  ]);
 
+  const [pendingUploads, setPendingUploads] = useState<Record<string, File>>({});
+  const [submitting, setSubmitting] = useState(false);
+
+  // ---------------------------
+  // LOAD EXISTING COURSE (EDIT)
+  // ---------------------------
   useEffect(() => {
     if (existingCourse) {
       const normalizedLessons = existingCourse.aulas.map((lesson: any) => ({
@@ -64,80 +60,106 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
       setCourseData({
         titulo: existingCourse.titulo,
         descricao: existingCourse.descricao,
-        categoria: existingCourse.categoria,
-        nivel: existingCourse.nivel,
-        aulas: normalizedLessons,
+        categoria: existingCourse.categoria || "",
+        nivel: existingCourse.nivel || "",
       });
 
       setLessons(normalizedLessons);
     }
   }, [existingCourse]);
 
+  // ---------------------------
+  // HANDLERS
+  // ---------------------------
   const addLesson = () => {
     const newLesson: Lesson = {
       id: Date.now().toString(),
       titulo: "",
       url: "",
-    }
-    setLessons([...lessons, newLesson])
-  }
+    };
+    setLessons([...lessons, newLesson]);
+  };
 
   const removeLesson = (id: string) => {
     if (lessons.length > 1) {
-      setLessons(lessons.filter((lesson) => lesson.id !== id))
+      setLessons(lessons.filter(l => l.id !== id));
+      setPendingUploads(prev => {
+        const copy = { ...prev };
+        delete copy[id];
+        return copy;
+      });
     }
-  }
+  };
 
   const updateLessonTitle = (id: string, titulo: string) => {
-    setLessons(lessons.map((lesson) => (lesson.id === id ? { ...lesson, titulo } : lesson)))
-  }
+    setLessons(prev => prev.map(l => (l.id === id ? { ...l, titulo } : l)));
+  };
 
-  const handleUploadSuccess = (key: string, fileName: string, lessonId: string) => {
-    console.log("[v0] Upload success for lesson:", lessonId, "key:", key)
-    setLessons(lessons.map((lesson) => (lesson.id === lessonId ? { ...lesson, url: key } : lesson)))
-    setUploadingLessonId(null)
-  }
+  const handleFileSelected = (lessonId: string, file: File) => {
+    // guarda o arquivo temporário
+    setPendingUploads(prev => ({ ...prev, [lessonId]: file }));
 
+    // exibe o nome no form
+    setLessons(prev =>
+      prev.map(l => (l.id === lessonId ? { ...l, url: file.name } : l))
+    );
+  };
+
+  // ---------------------------
+  // SUBMIT HANDLER (UPLOAD)
+  // ---------------------------
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!courseData.titulo.trim()) {
-      toast("Campo obrigatório", {
-        description: "Por favor, preencha o título do curso"
-      })
-      return
+    if (!courseData.titulo.trim() || !courseData.descricao.trim()) {
+      toast("Campos obrigatórios", {
+        description: "Preencha título e descrição",
+      });
+      return;
     }
 
-    if (!courseData.descricao.trim()) {
-      toast("Campo obrigatório", {
-        description: "Por favor, preencha a descrição do curso"
-      })
-      return
-    }
-
-    if (lessons.length === 0 || lessons.some((l) => !l.titulo || !l.url)) {
+    if (lessons.some(l => !l.titulo || !l.url)) {
       toast("Aulas incompletas", {
-        description: "Todas as aulas precisam de título e vídeo"
-      })
-      return
+        description: "Todas as aulas precisam de título e vídeo",
+      });
+      return;
     }
 
-    setSubmitting(true)
+    setSubmitting(true);
 
     try {
-      console.log("[Submitting course with payload:", {
-        titulo: courseData.titulo,
-        descricao: courseData.descricao,
-        aulas: lessons,
-      })
+      const uploadedKeys: Record<string, string> = {};
 
+      // 1. Upload de cada vídeo pendente
+      for (const lesson of lessons) {
+        const file = pendingUploads[lesson.id];
+        if (!file) continue; // vídeo existente
+
+        const { uploadUrl, key } = await ApiClient.uploadVideo(
+          file.name,
+          file.type
+        );
+
+        await fetch(uploadUrl, {
+          method: "PUT",
+          body: file,
+          headers: { "Content-Type": file.type },
+        });
+
+        uploadedKeys[lesson.id] = key;
+      }
+
+      // 2. Substitui vídeos atualizados
+      const aulasFinal = lessons.map(lesson => ({
+        ...lesson,
+        url: uploadedKeys[lesson.id] ?? lesson.url,
+      }));
+
+      // 3. EDITAR
       if (existingCourse) {
         await ApiClient.updateCourse(existingCourse._id || existingCourse.id, {
-          titulo: courseData.titulo,
-          descricao: courseData.descricao,
-          categoria: courseData.categoria || "",
-          nivel: courseData.nivel || "",
-          aulas: lessons,
+          ...courseData,
+          aulas: aulasFinal,
         });
 
         toast("Sucesso!", {
@@ -147,32 +169,30 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
         return router.push("/my-courses");
       }
 
+      // 4. CRIAR
       await ApiClient.createCourse({
-        titulo: courseData.titulo,
-        descricao: courseData.descricao,
-        categoria: courseData.categoria || "",
-        nivel: courseData.nivel || "",
-        aulas: lessons,
+        ...courseData,
+        aulas: aulasFinal,
       });
 
       toast("Sucesso!", {
         description: "Curso criado com sucesso!",
       });
 
-      return router.push("/dashboard");
-
+      router.push("/dashboard");
     } catch (error) {
-      console.error("Course creation error:", error)
-      const errorMessage = error instanceof Error ? error.message : "Erro ao criar curso"
-
-      toast("Erro ao criar curso", {
-        description: errorMessage
-      })
+      console.error(error);
+      toast("Erro", {
+        description: "Não foi possível salvar o curso",
+      });
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
+  // ---------------------------
+  // RENDER
+  // ---------------------------
   return (
     <ProtectedRoute requiredRole={["instrutor", "admin"]}>
       <div className="min-h-screen flex flex-col">
@@ -184,8 +204,12 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
           <main className="flex-1 overflow-auto">
             <div className="container max-w-4xl mx-auto px-4 py-8">
               <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-2">Criar Novo Curso</h1>
-                <p className="text-muted-foreground">Preencha as informações abaixo para criar seu curso</p>
+                <h1 className="text-3xl font-bold mb-2">
+                  {existingCourse ? "Editar Curso" : "Criar Novo Curso"}
+                </h1>
+                <p className="text-muted-foreground">
+                  Preencha as informações abaixo
+                </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -193,44 +217,56 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
                 <Card>
                   <CardHeader>
                     <CardTitle>Informações Básicas</CardTitle>
-                    <CardDescription>Dados principais do seu curso</CardDescription>
+                    <CardDescription>Dados principais do curso</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {/* Título */}
                     <div className="space-y-2">
-                      <Label htmlFor="titulo">Título do Curso *</Label>
+                      <Label>Título *</Label>
                       <Input
-                        id="titulo"
-                        placeholder="Ex: Desenvolvimento Web com React"
                         value={courseData.titulo}
-                        onChange={(e) => setCourseData({ ...courseData, titulo: e.target.value })}
-                        required
+                        onChange={e =>
+                          setCourseData({
+                            ...courseData,
+                            titulo: e.target.value,
+                          })
+                        }
                         disabled={submitting}
                       />
                     </div>
 
+                    {/* Descrição */}
                     <div className="space-y-2">
-                      <Label htmlFor="description">Descrição do Curso *</Label>
+                      <Label>Descrição *</Label>
                       <Textarea
-                        id="description"
-                        placeholder="Descreva em detalhes o que os alunos aprenderão neste curso"
                         rows={4}
                         value={courseData.descricao}
-                        onChange={(e) => setCourseData({ ...courseData, descricao: e.target.value })}
-                        required
+                        onChange={e =>
+                          setCourseData({
+                            ...courseData,
+                            descricao: e.target.value,
+                          })
+                        }
                         disabled={submitting}
                       />
                     </div>
 
+                    {/* Categoria & Nível */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="category">Categoria</Label>
+                        <Label>Categoria</Label>
                         <Select
                           value={courseData.categoria}
-                          onValueChange={(value) => setCourseData({ ...courseData, categoria: value })}
+                          onValueChange={value =>
+                            setCourseData({
+                              ...courseData,
+                              categoria: value,
+                            })
+                          }
                           disabled={submitting}
                         >
-                          <SelectTrigger id="category">
-                            <SelectValue placeholder="Selecione uma categoria" />
+                          <SelectTrigger>
+                            <SelectValue placeholder="Categoria" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="desenvolvimento">Desenvolvimento</SelectItem>
@@ -244,14 +280,19 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="level">Nível</Label>
+                        <Label>Nível</Label>
                         <Select
                           value={courseData.nivel}
-                          onValueChange={(value) => setCourseData({ ...courseData, nivel: value })}
+                          onValueChange={value =>
+                            setCourseData({
+                              ...courseData,
+                              nivel: value,
+                            })
+                          }
                           disabled={submitting}
                         >
-                          <SelectTrigger id="level">
-                            <SelectValue placeholder="Selecione o nível" />
+                          <SelectTrigger>
+                            <SelectValue placeholder="Nível" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="iniciante">Iniciante</SelectItem>
@@ -267,51 +308,63 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
                 {/* Lessons */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Aulas do Curso</CardTitle>
-                    <CardDescription>Adicione as aulas e faça upload dos vídeos</CardDescription>
+                    <CardTitle>Aulas</CardTitle>
+                    <CardDescription>Adicione o conteúdo do curso</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {lessons.map((lesson, index) => (
-                      <div key={lesson.id} className="p-4 border border-border rounded-lg space-y-4">
+                      <div
+                        key={lesson.id}
+                        className="p-4 border border-border rounded-lg space-y-4"
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
+                            <GripVertical className="h-5 w-5 text-muted-foreground" />
                             <span className="font-medium">Aula {index + 1}</span>
                           </div>
+
                           {lessons.length > 1 && (
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
                               onClick={() => removeLesson(lesson.id)}
-                              className="text-destructive hover:text-destructive"
                               disabled={submitting}
+                              className="text-destructive"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           )}
                         </div>
 
+                        {/* Título da aula */}
                         <div className="space-y-2">
-                          <Label htmlFor={`lesson-titulo-${lesson.id}`}>Título da Aula *</Label>
+                          <Label>Título da Aula *</Label>
                           <Input
-                            id={`lesson-titulo-${lesson.id}`}
                             value={lesson.titulo}
-                            onChange={(e) => updateLessonTitle(lesson.id, e.target.value)}
-                            placeholder="Ex: Introdução ao React"
-                            required
+                            onChange={e =>
+                              updateLessonTitle(lesson.id, e.target.value)
+                            }
                             disabled={submitting}
                           />
                         </div>
 
+                        {/* Vídeo */}
                         <div className="space-y-2">
-                          <Label htmlFor={`lesson-video-${lesson.id}`}>Vídeo da Aula *</Label>
+                          <Label>Vídeo da Aula *</Label>
+
                           <VideoUpload
-                            onUploadSuccess={(key, fileName) => handleUploadSuccess(key, fileName, lesson.id)}
-                            onUploadStart={() => setUploadingLessonId(lesson.id)}
-                            onUploadEnd={() => setUploadingLessonId(null)}
+                            onFileSelected={(file: File) =>
+                              handleFileSelected(lesson.id, file)
+                            }
+                            disabled={submitting}
                           />
-                          {lesson.url && <p className="text-xs text-green-600">Video enviado: {lesson.url}</p>}
+
+                          {lesson.url && (
+                            <p className="text-xs text-green-600">
+                              Vídeo selecionado: {lesson.url}
+                            </p>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -320,10 +373,10 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
                       type="button"
                       variant="outline"
                       onClick={addLesson}
+                      disabled={submitting}
                       className="w-full bg-transparent"
-                      disabled={submitting || uploadingLessonId !== null}
                     >
-                      <Plus className="mr-2 h-4 w-4" />
+                      <Plus className="h-4 w-4 mr-2" />
                       Adicionar Aula
                     </Button>
                   </CardContent>
@@ -331,15 +384,18 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
 
                 {/* Actions */}
                 <div className="flex items-center justify-between gap-4">
-                  <Button type="button" variant="outline" asChild className="bg-transparent" disabled={submitting}>
+                  <Button type="button" variant="outline" asChild disabled={submitting}>
                     <Link href="/dashboard">Cancelar</Link>
                   </Button>
-                  <Button type="submit" disabled={submitting || uploadingLessonId !== null}>
+
+                  <Button type="submit" disabled={submitting}>
                     {submitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Publicando...
+                        Salvando...
                       </>
+                    ) : existingCourse ? (
+                      "Salvar Alterações"
                     ) : (
                       "Publicar Curso"
                     )}
@@ -351,5 +407,5 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
         </div>
       </div>
     </ProtectedRoute>
-  )
+  );
 }
