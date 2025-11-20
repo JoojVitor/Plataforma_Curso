@@ -26,7 +26,7 @@
 - [📚 PLATAFORMA CURSO](#-plataforma-curso)
   - [Sumário](#sumário)
   - [Visão Geral](#visão-geral)
-    - [Por que usar a Plataforma\_Curso?](#por-que-usar-a-plataforma_curso)
+    - [Sobre o projeto](#sobre-o-projeto)
   - [Primeiros Passos](#primeiros-passos)
     - [Pré-requisitos](#pré-requisitos)
   - [Instalação](#instalação)
@@ -41,10 +41,10 @@
 
 ## Visão Geral
 
-**Plataforma Curso** é uma solução open-source completa para criação de plataformas de ensino online escaláveis.  
+**Plataforma Curso** é uma solução completa para criação de plataformas de ensino online escaláveis.  
 Ela combina um backend seguro em **TypeScript** com um frontend moderno em **Next.js**, oferecendo:
 
-### Por que usar a Plataforma_Curso?
+### Sobre o projeto
 
 - **Autenticação Segura:** Login e registro baseados em funções (aluno, instrutor e admin).  
 - **Armazenamento em Nuvem:** Upload de vídeos via AWS S3 com URLs assinadas.  
