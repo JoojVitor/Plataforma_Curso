@@ -44,31 +44,6 @@ Frontend ───> Backend ───> MongoDB
 ---
 
 ## 2. Estrutura do Backend
-A estrutura atual do backend é:
-
-```
-backend/
-  src/
-    middleware/
-      authMiddleware.ts
-    models/
-      Course.ts
-      Enrollment.ts
-      User.ts
-    routes/
-      admin.ts
-      auth.ts
-      courses.ts
-      enrollments.ts
-      health.ts
-      profile.ts
-      upload.ts
-    utils/
-      env.ts
-      s3.ts
-    db.ts
-    index.ts
-```
 
 ### 2.1 Middleware de Autenticação
 
