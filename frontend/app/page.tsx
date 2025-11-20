@@ -41,7 +41,7 @@ export default function HomePage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-primary/10 to-background py-20 px-4">
+      <section className="bg-linear-to-b from-primary/10 to-background py-20 px-4">
         <div className="container max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-balance">
             Aprenda com os Melhores Instrutores
@@ -110,7 +110,7 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredCourses.map((course) => (
-              <CourseCard key={course.id} {...course} />
+              <CourseCard descricao={""} instrutor={""} key={course.id} {...course} />
             ))}
           </div>
           <div className="mt-8 text-center sm:hidden">
