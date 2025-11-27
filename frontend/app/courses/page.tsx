@@ -97,7 +97,7 @@ export default function CoursesPage() {
       titulo: course.titulo,
       descricao: course.descricao,
       instrutor: course.instrutor?.nome || "Instrutor",
-      thumbnail: "/course-placeholder.png",
+      thumbnail: "/curso-placeholder.jpg",
       duration: `${course.aulas?.length || 0} aulas`,
       students: Math.floor(Math.random() * 500) + 50,
       categoria: course.categoria || "Desenvolvimento",
