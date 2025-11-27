@@ -40,7 +40,6 @@ export function VideoUpload({ onFileSelected }: VideoUploadProps) {
       return;
     }
 
-    // UI effect only: fake progress bar (optional)
     setProgress(50);
     setTimeout(() => setProgress(100), 300);
 
@@ -75,7 +74,6 @@ export function VideoUpload({ onFileSelected }: VideoUploadProps) {
     );
   }
 
-  // Error UI (same layout)
   if (error) {
     return (
       <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-lg p-4">
@@ -90,7 +88,6 @@ export function VideoUpload({ onFileSelected }: VideoUploadProps) {
     );
   }
 
-  // Default UI (same layout)
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-4">

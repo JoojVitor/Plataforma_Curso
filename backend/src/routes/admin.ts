@@ -4,7 +4,6 @@ import User from "../models/User";
 
 const router = Router();
 
-// Middleware para garantir que é admin
 function isAdmin(req: AuthRequest, res: any, next: any) {
   if (req.user.role !== "admin") {
     return res.status(403).json({ message: "Apenas administradores têm acesso a esta rota" });
@@ -12,17 +11,15 @@ function isAdmin(req: AuthRequest, res: any, next: any) {
   next();
 }
 
-// Listar todos os usuários
 router.get("/users", authMiddleware, isAdmin, async (req, res) => {
   try {
-    const users = await User.find().select("-senha"); // não expõe senha
+    const users = await User.find().select("-senha");
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: "Erro ao listar usuários", error });
   }
 });
 
-// Atualizar role de um usuário
 router.put("/users/:id/role", authMiddleware, isAdmin, async (req, res) => {
   try {
     const { role } = req.body;

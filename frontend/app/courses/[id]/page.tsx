@@ -83,7 +83,6 @@ export default function CourseDetailPage() {
     fetchCourseAndLessons()
   }, [id, isAuthenticated])
 
-  // 🔹 Calcula a duração individual de cada vídeo
   useEffect(() => {
     const updateDurations = async () => {
       const updatedLessons = await Promise.all(

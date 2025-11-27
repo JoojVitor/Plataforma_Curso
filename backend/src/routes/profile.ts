@@ -4,7 +4,6 @@ import User from "../models/User";
 
 const router = Router();
 
-// Rota protegida: obter dados do usuário logado
 router.get("/", authMiddleware, async (req: AuthRequest, res) => {
   try {
     const user = await User.findById(req.user.id).select("-senha");

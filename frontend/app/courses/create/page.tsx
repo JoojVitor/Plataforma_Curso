@@ -47,9 +47,6 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
   const [pendingUploads, setPendingUploads] = useState<Record<string, File>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  // ---------------------------
-  // LOAD EXISTING COURSE (EDIT)
-  // ---------------------------
   useEffect(() => {
     if (existingCourse) {
       const normalizedLessons = existingCourse.aulas.map((lesson: any) => ({
@@ -68,9 +65,6 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
     }
   }, [existingCourse]);
 
-  // ---------------------------
-  // HANDLERS
-  // ---------------------------
   const addLesson = () => {
     const newLesson: Lesson = {
       id: Date.now().toString(),
@@ -96,18 +90,13 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
   };
 
   const handleFileSelected = (lessonId: string, file: File) => {
-    // guarda o arquivo temporário
     setPendingUploads(prev => ({ ...prev, [lessonId]: file }));
 
-    // exibe o nome no form
     setLessons(prev =>
       prev.map(l => (l.id === lessonId ? { ...l, url: file.name } : l))
     );
   };
 
-  // ---------------------------
-  // SUBMIT HANDLER (UPLOAD)
-  // ---------------------------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -130,10 +119,9 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
     try {
       const uploadedKeys: Record<string, string> = {};
 
-      // 1. Upload de cada vídeo pendente
       for (const lesson of lessons) {
         const file = pendingUploads[lesson.id];
-        if (!file) continue; // vídeo existente
+        if (!file) continue;
 
         const { uploadUrl, key } = await ApiClient.uploadVideo(
           file.name,
@@ -149,13 +137,11 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
         uploadedKeys[lesson.id] = key;
       }
 
-      // 2. Substitui vídeos atualizados
       const aulasFinal = lessons.map(lesson => ({
         ...lesson,
         url: uploadedKeys[lesson.id] ?? lesson.url,
       }));
 
-      // 3. EDITAR
       if (existingCourse) {
         await ApiClient.updateCourse(existingCourse._id || existingCourse.id, {
           ...courseData,
@@ -169,7 +155,6 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
         return router.push("/my-courses");
       }
 
-      // 4. CRIAR
       await ApiClient.createCourse({
         ...courseData,
         aulas: aulasFinal,
@@ -190,9 +175,6 @@ export default function CreateCoursePage({ existingCourse }: CreateCoursePagePro
     }
   };
 
-  // ---------------------------
-  // RENDER
-  // ---------------------------
   return (
     <ProtectedRoute requiredRole={["instrutor", "admin"]}>
       <div className="min-h-screen flex flex-col">

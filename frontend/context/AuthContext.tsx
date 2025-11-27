@@ -52,9 +52,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }, []);
 
     const login = async (email: string, senha: string) => {
-        // Usamos o setIsLoading GLOBAL aqui para o caso de
-        // querermos mostrar um spinner global, mas o local
-        // da página de login é mais importante.
         setIsLoading(true);
         setError(null);
         try {
@@ -62,20 +59,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setUser(response.data.user);
             setIsAuthenticated(true);
             router.push('/dashboard');
-            // O finally não será chamado porque estamos redirecionando
         } catch (err: any) {
             console.error(err);
             const errorMessage = err.response?.data?.message || "Erro ao tentar fazer login.";
             setError(errorMessage);
             setIsAuthenticated(false);
             setUser(null);
-            setIsLoading(false); // Defina como false em caso de erro
+            setIsLoading(false);
 
-            // CORREÇÃO: Relance o erro para a página de login
             throw new Error(errorMessage);
         }
-        // Removemos o finally daqui, pois o estado de loading
-        // deve ser tratado nos blocos try (com redirecionamento) ou catch
     };
 
     const logout = async () => {

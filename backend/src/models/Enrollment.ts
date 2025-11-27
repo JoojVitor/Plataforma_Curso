@@ -12,7 +12,6 @@ const EnrollmentSchema: Schema = new Schema<IEnrollment>({
   data: { type: Date, default: Date.now }
 });
 
-// Garante que um aluno não se inscreva 2x no mesmo curso
 EnrollmentSchema.index({ aluno: 1, curso: 1 }, { unique: true });
 
 export default mongoose.model<IEnrollment>("Enrollment", EnrollmentSchema);
